@@ -1,0 +1,48 @@
+Source: gsp670-linux
+Section: sound
+Priority: optional
+Maintainer: gsp670-linux contributors
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/OWNER/gsp670-linux
+
+Package: gsp670
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-hidapi
+Recommends: pipewire,
+            wireplumber
+Suggests: python3-dbus,
+          python3-gi
+Description: Linux support for the EPOS|Sennheiser GSP 670 headset and GSA 70
+ This package provides Linux support for the EPOS|Sennheiser GSP 670 wireless
+ gaming headset and the GSA 70 wireless dongle.
+ .
+ It installs the udev rules that grant hidraw access to the device, a systemd
+ unit that recovers the ALSA card when the kernel binds the audio interfaces
+ without registering one, and a WirePlumber configuration that keeps the
+ USB-audio nodes from being torn down while idle.
+ .
+ The optional Python library adds device controls: sidetone, noise reduction
+ and auto-power-off, plus device identity and event monitoring.
+ .
+ Note that the GSA 70 dongle firmware has a bug that adds roughly 1.4 seconds
+ of audio latency. Wired USB-C mode has about 44 ms latency. See the README
+ for details.
+
+Package: gsp670-dbus
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         gsp670 (= ${binary:Version}),
+         python3-dbus,
+         python3-gi
+Description: D-Bus service for the EPOS|Sennheiser GSP 670 headset
+ Exposes the GSP 670 device controls (sidetone, noise reduction, auto
+ power off) and link/battery state on the system D-Bus, so that desktop
+ environments and control panels can reach them.

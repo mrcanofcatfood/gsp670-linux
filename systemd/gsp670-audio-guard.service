@@ -1,0 +1,18 @@
+[Unit]
+Description=Ensure EPOS GSA 70 USB-audio card is registered
+Documentation=https://github.com/OWNER/gsp670-linux
+After=sound.target
+# Triggered by udev (see udev/99-gsp670-audio.rules) when the dongle
+# (re-)enumerates, and started once at boot as a fallback.
+
+[Service]
+Type=oneshot
+# No RemainAfterExit=yes on purpose: the unit returns to "inactive (dead)"
+# after each run so a later udev 'add' event can start it again.
+ExecStart=/usr/lib/gsp670/gsp670-audio-guard.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gsp670-audio-guard
+
+[Install]
+WantedBy=multi-user.target

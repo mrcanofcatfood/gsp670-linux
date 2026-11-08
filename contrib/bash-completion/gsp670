@@ -1,0 +1,94 @@
+# bash completion for gsp670
+# Install to: /usr/share/bash-completion/completions/gsp670
+# Or: ~/.local/share/bash-completion/completions/gsp670
+
+_gsp670()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    # Global options
+    local global_opts='-d --device -v --version'
+
+    # Subcommands
+    local subcommands="info status controls battery monitor protocol events test"
+
+    # Controls subcommands
+    local controls_subcommands="list get set"
+
+    # Protocol subcommands
+    local protocol_subcommands="inspect"
+
+    # Test subcommands
+    local test_subcommands="audio"
+
+    # Control names
+    local control_names="volume mute sidetone"
+
+    # Device choices
+    local device_choices="auto dongle headset"
+
+    # Handle main command
+    if [[ ${#words[@]} -eq 1 ]] || [[ "${cur}" == -* ]]; then
+        # Complete global options or subcommands
+        if [[ "${cur}" == -* ]]; then
+            COMPREPLY=($(compgen -W "${global_opts}" -- "${cur}"))
+        else
+            COMPREPLY=($(compgen -W "${subcommands}" -- "${cur}"))
+        fi
+        return
+    fi
+
+    # Handle subcommands
+    case "${words[1]}" in
+        info)
+            COMPREPLY=($(compgen -W "--json" -- "${cur}"))
+            ;;
+
+        status)
+            COMPREPLY=($(compgen -W "--json" -- "${cur}"))
+            ;;
+
+        controls)
+            if [[ ${#words[@]} -eq 2 ]]; then
+                COMPREPLY=($(compgen -W "${controls_subcommands}" -- "${cur}"))
+            elif [[ "${words[2]}" == "get" ]] || [[ "${words[2]}" == "set" ]]; then
+                COMPREPLY=($(compgen -W "${control_names}" -- "${cur}"))
+            fi
+            ;;
+
+        battery)
+            COMPREPLY=($(compgen -W "--json" -- "${cur}"))
+            ;;
+
+        monitor)
+            # No additional completions
+            ;;
+
+        protocol)
+            if [[ ${#words[@]} -eq 2 ]]; then
+                COMPREPLY=($(compgen -W "${protocol_subcommands}" -- "${cur}"))
+            fi
+            ;;
+
+        events)
+            # No additional completions
+            ;;
+
+        test)
+            if [[ ${#words[@]} -eq 2 ]]; then
+                COMPREPLY=($(compgen -W "${test_subcommands}" -- "${cur}"))
+            fi
+            ;;
+    esac
+
+    # Handle -d/--device completion for any command
+    if [[ "${prev}" == "-d" ]] || [[ "${prev}" == "--device" ]]; then
+        COMPREPLY=($(compgen -W "${device_choices}" -- "${cur}"))
+    fi
+} && complete -F _gsp670 gsp670
+
+# Local Variables:
+# mode: shell-script
+# sh-shell: bash
+# End:

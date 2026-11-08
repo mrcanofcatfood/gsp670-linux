@@ -1,0 +1,69 @@
+# Maintainer: gsp670-linux contributors
+# Contributor: gsp670-linux contributors <noreply@example.com>
+#
+# This PKGBUILD is also usable as a template for other Arch-family
+# distributions (CachyOS, Manjaro, EndeavourOS, Garuda).
+
+pkgname=gsp670-linux
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Linux support for the EPOS|Sennheiser GSP 670 headset and GSA 70 wireless dongle"
+arch=('any')
+url="https://github.com/OWNER/gsp670-linux"
+license=('MIT')
+depends=('python-hidapi')
+optdepends=(
+    "pipewire: audio routing (required for the Game/Chat sinks)"
+    "wireplumber: keeps the USB-audio nodes alive (recommended)"
+    "python-dbus: D-Bus interface for the device controls"
+    "python-gobject: D-Bus interface for the device controls"
+)
+makedepends=('python-build' 'python-installer' 'python-setuptools')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+# The audio path needs no package from this project: the stereo "Game" sink
+# and the mono "Chat" sink come from the stock usb-gaming-headset.conf ALSA
+# profile set that ships with PulseAudio/ALSA.
+package() {
+    python -m build --wheel --no-isolation -w dist
+}
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+}
+
+check() {
+    cd "$srcdir/$pkgname-$pkgver"
+    # The hardware test needs a physically connected device.
+    python -m pytest -q tests/unit tests/integration
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+
+    python -m installer --destdir="$pkgdir" dist/*.whl
+
+    install -Dm644 udev/99-gsp670.rules \
+        "$pkgdir/usr/lib/udev/rules.d/99-gsp670.rules"
+    install -Dm644 udev/99-gsp670-audio.rules \
+        "$pkgdir/usr/lib/udev/rules.d/99-gsp670-audio.rules"
+
+    install -Dm755 scripts/gsp670-audio-guard.sh \
+        "$pkgdir/usr/lib/gsp670/gsp670-audio-guard.sh"
+
+    install -Dm644 systemd/gsp670-audio-guard.service \
+        "$pkgdir/usr/lib/systemd/system/gsp670-audio-guard.service"
+    install -Dm644 systemd/gsp670-daemon.service \
+        "$pkgdir/usr/lib/systemd/system/gsp670-daemon.service"
+    install -Dm644 systemd/gsp670-monitor.service \
+        "$pkgdir/usr/lib/systemd/system/gsp670-monitor.service"
+
+    install -Dm644 contrib/wireplumber/50-gsp670.conf \
+        "$pkgdir/usr/share/wireplumber/wireplumber.conf.d/50-gsp670.conf"
+    install -Dm644 contrib/pipewire/gsp670-virtual-surround-7.1.conf \
+        "$pkgdir/usr/share/pipewire/pipewire.conf.d/50-gsp670-surround.conf"
+
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

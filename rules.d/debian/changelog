@@ -1,0 +1,7 @@
+gsp670-linux (0.1.0) unstable; urgency=medium
+
+  * Initial release: udev rules, audio-guard unit, WirePlumber configuration
+    and the optional Python control library for the EPOS|Sennheiser GSP 670
+    headset and GSA 70 dongle.
+
+ -- gsp670-linux contributors <noreply@example.com>  Sun, 08 Nov 2026 00:00:00 +0000

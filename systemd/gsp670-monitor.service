@@ -1,0 +1,25 @@
+[Unit]
+Description=GSP 670 Device Event Monitor
+Documentation=https://github.com/OWNER/gsp670-linux
+After=local-fs.target
+Wants=systemd-udev-settle.service
+
+[Service]
+Type=simple
+# Prints unsolicited device->host HID events (link state, button presses,
+# charging state) to the journal. Requires the gsp670 package to be installed.
+ExecStart=/usr/bin/python3 -m gsp670.cli monitor
+
+Restart=on-failure
+RestartSec=5
+
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gsp670-monitor
+
+[Install]
+WantedBy=multi-user.target

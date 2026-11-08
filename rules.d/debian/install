@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Debian packaging helper for gsp670-linux.
+#
+# Build a source package:
+#     cd rules.d/debian && dpkg-buildpackage -us -uc -b
+#
+# See rules.d/README.md for the udev/ vs rules.d/ split.
+
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
+
+if ! command -v dh >/dev/null 2>&1; then
+    echo "debhelper not installed." >&2
+    echo "Install: sudo apt install debhelper dh-python python3-all build-essential" >&2
+    exit 1
+fi
+
+echo "==> Building the Python wheel"
+python3 -m build --wheel --no-isolation
+
+echo "==> Running the test suite"
+python3 -m pytest -q tests/unit tests/integration
+
+echo
+echo "Now build the package:"
+echo "  cd rules.d/debian && dpkg-buildpackage -us -uc -b"

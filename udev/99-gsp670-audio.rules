@@ -1,0 +1,10 @@
+# udev rule for EPOS|Sennheiser GSA 70 dongle (1395:0300)
+#
+# Install to /etc/udev/rules.d/99-gsp670-audio.rules
+# Then run: sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# snd-usb-audio can leave the dongle's audio interfaces bound without creating
+# an ALSA card (no "EPOS GSA 70" entry in /proc/asound/cards -> no sink/source
+# -> silent headset). Ask systemd to run the guard, which re-probes only when
+# the card is actually missing.
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="1395", ATTR{idProduct}=="0300", TAG+="systemd", ENV{SYSTEMD_WANTS}+="gsp670-audio-guard.service"

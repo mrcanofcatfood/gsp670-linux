@@ -1,0 +1,6 @@
+usr/lib/udev/rules.d/99-gsp670.rules
+usr/lib/udev/rules.d/99-gsp670-audio.rules
+usr/lib/gsp670/gsp670-audio-guard.sh
+usr/lib/systemd/system/gsp670-audio-guard.service
+usr/share/wireplumber/wireplumber.conf.d/50-gsp670.conf
+usr/share/pipewire/pipewire.conf.d/50-gsp670-surround.conf

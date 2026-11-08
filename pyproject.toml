@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gsp670"
+version = "0.1.0"
+description = "Linux support for the EPOS|Sennheiser GSP 670 headset and GSA 70 wireless dongle"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "gsp670-linux contributors" },
+]
+keywords = ["epos", "sennheiser", "gsp670", "gsa70", "headset", "hid", "audio", "pipewire"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound :: Hardware",
+    "Topic :: System :: Hardware",
+]
+
+requires-python = ">=3.9"
+dependencies = [
+    "hidapi>=0.14.0",
+]
+
+[project.optional-dependencies]
+# The D-Bus daemon is optional: the CLI and library work with only `hidapi`.
+dbus = [
+    "dbus-python>=1.3.2",
+    "PyGObject>=3.40",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+gsp670 = "gsp670.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/OWNER/gsp670-linux"
+Documentation = "https://github.com/OWNER/gsp670-linux#readme"
+Repository = "https://github.com/OWNER/gsp670-linux.git"
+Issues = "https://github.com/OWNER/gsp670-linux/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gsp670 = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "hardware: requires a physically connected GSP 670 / GSA 70",
+]
+
+[tool.coverage.run]
+source = ["src/gsp670"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true

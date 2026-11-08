@@ -1,0 +1,296 @@
+{
+    "input": {
+        "blocklist": [],
+        "plugins_order": [
+            "equalizer#0",
+            "gate#0",
+            "limiter#0"
+        ],
+        "equalizer#0": {
+            "bypass": false,
+            "input-gain": 0.0,
+            "output-gain": 0.0,
+            "mode": "IIR",
+            "num-bands": 10,
+            "split-channels": false,
+            "balance": 0.0,
+            "pitch-left": 0.0,
+            "pitch-right": 0.0,
+            "left": {
+                "band0": {
+                    "type": "High-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": -3.0,
+                    "frequency": 8000.0,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band1": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": -1.5,
+                    "frequency": 4000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band2": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 2000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band3": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 1.5,
+                    "frequency": 1000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band4": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 2.0,
+                    "frequency": 500.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band5": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 2.5,
+                    "frequency": 250.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band6": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 1.0,
+                    "frequency": 125.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band7": {
+                    "type": "Low-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 62.5,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band8": {
+                    "type": "Low-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 31.25,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band9": {
+                    "type": "High-Pass",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 20.0,
+                    "q": 0.707,
+                    "width": 1.0
+                }
+            },
+            "right": {
+                "band0": {
+                    "type": "High-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": -3.0,
+                    "frequency": 8000.0,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band1": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": -1.5,
+                    "frequency": 4000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band2": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 2000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band3": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 1.5,
+                    "frequency": 1000.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band4": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 2.0,
+                    "frequency": 500.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band5": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 2.5,
+                    "frequency": 250.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band6": {
+                    "type": "Peak",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 1.0,
+                    "frequency": 125.0,
+                    "q": 1.0,
+                    "width": 1.0
+                },
+                "band7": {
+                    "type": "Low-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 62.5,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band8": {
+                    "type": "Low-Shelf",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 31.25,
+                    "q": 0.707,
+                    "width": 1.0
+                },
+                "band9": {
+                    "type": "High-Pass",
+                    "mode": "RLC (Butterworth)",
+                    "slope": "Medium",
+                    "solo": false,
+                    "mute": false,
+                    "gain": 0.0,
+                    "frequency": 20.0,
+                    "q": 0.707,
+                    "width": 1.0
+                }
+            }
+        },
+        "gate#0": {
+            "bypass": true,
+            "input-gain": 0.0,
+            "output-gain": 0.0,
+            "dry": 1.0,
+            "wet": 1.0,
+            "attack": 5.0,
+            "release": 50.0,
+            "curve-threshold": -55.0,
+            "curve-zone": 0.0,
+            "hysteresis": true,
+            "hysteresis-threshold": -60.0,
+            "hysteresis-zone": 0.0,
+            "reduction": 12.0,
+            "makeup": 0.0,
+            "stereo-split": false,
+            "sidechain": {
+                "type": "External",
+                "mode": "Linked",
+                "source": "Middle",
+                "stereo-split-source": "Middle",
+                "preamp": 0.0,
+                "reactivity": 10.0,
+                "lookahead": 0.0
+            },
+            "hpf-mode": "LR4 (12dB/oct)",
+            "hpf-frequency": 80.0,
+            "lpf-mode": "LR4 (12dB/oct)",
+            "lpf-frequency": 15000.0
+        },
+        "limiter#0": {
+            "bypass": false,
+            "input-gain": 0.0,
+            "output-gain": 0.0,
+            "mode": "Line Wide",
+            "oversampling": "Half x4/24 bit",
+            "dithering": "None",
+            "sidechain-type": "External",
+            "lookahead": 5.0,
+            "attack": 5.0,
+            "release": 5.0,
+            "threshold": 0.0,
+            "sidechain-preamp": 1.0,
+            "stereo-link": 100,
+            "alr-attack": 5.0,
+            "alr-release": 50.0,
+            "alr-knee": 1.0,
+            "alr-knee-smooth": -5.0,
+            "alr": true,
+            "gain-boost": true
+        }
+    }
+}

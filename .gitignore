@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Node (only used by the optional Qt GUI experiments)
+node_modules/
+
+# Proprietary vendor binaries — never redistributed
+firmware/*.msi
+extracted/
+artifacts/dlls/
+artifacts/decompiled/
+
+# USB captures — binary, multi-MB, may contain copyrighted firmware
+captures/*.pcap
+captures/*.pcapng
+
+# VM images — large, never committed
+tools/VM/*.qcow2
+tools/VM/*.qcow2.*
+tools/VM/windows-gsp670.ready-for-capture
+tools/VM/capture-tools.iso
+
+# Local recording artifacts
+rec_*.wav
+*.wav.tmp
+
+# Stray local artifacts accidentally created in the repo root
+# (WirePlumber state fragments and one-off capture recordings)
+/alsa_output.*
+/node.autoconnect
+
+# Literal ~ directories (created by buggy Path('~/foo') without expanduser())
+/~
+
+# Editor / OS
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,95 @@
+#compdef gsp670
+
+_gsp670()
+{
+    local -a commands subcommands
+
+    commands=(
+        'info:Show device information'
+        'status:Show current headset status'
+        'controls:Control operations'
+        'battery:Show battery status'
+        'monitor:Monitor control events'
+        'protocol:Protocol inspection commands'
+        'events:Show raw HID events'
+        'test:Test operations'
+    )
+
+    subcommands_controls=(
+        'list:List available controls'
+        'get:Get control value'
+        'set:Set control value'
+    )
+
+    subcommands_protocol=(
+        'inspect:Show all known opcodes and status'
+    )
+
+    subcommands_test=(
+        'audio:Run comprehensive audio tests'
+    )
+
+    control_names=(
+        'volume'
+        'mute'
+        'sidetone'
+    )
+
+    device_choices=(
+        'auto:Auto-detect device'
+        'dongle:Use GSA 70 dongle'
+        'headset:Use GSP 670 headset'
+    )
+
+    local context state line
+    local -A opt_args
+
+    _arguments -C \
+        '-d+[Device to use]:device:->device' \
+        '--device=[Device to use]:device:->device' \
+        '-v[Show version]' \
+        '--version[Show version]' \
+        '1: :->command' \
+        '2: :->subcommand' \
+        '3: :->subsubcommand' \
+        '*: :->args'
+
+    case $state in
+        command)
+            _describe 'command' commands
+            ;;
+        device)
+            _describe 'device' device_choices
+            ;;
+        subcommand)
+            case $words[2] in
+                controls)
+                    _describe 'control subcommand' subcommands_controls
+                    ;;
+                protocol)
+                    _describe 'protocol subcommand' subcommands_protocol
+                    ;;
+                test)
+                    _describe 'test subcommand' subcommands_test
+                    ;;
+            esac
+            ;;
+        subsubcommand)
+            case $words[2] in
+                controls)
+                    if [[ $words[3] == @(get|set) ]]; then
+                        _describe 'control name' control_names
+                    fi
+                    ;;
+            esac
+            ;;
+    esac
+
+    return 0
+}
+
+_gsp670 "$@"
+
+# Local Variables:
+# mode: zsh
+# End:

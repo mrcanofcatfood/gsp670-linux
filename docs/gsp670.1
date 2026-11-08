@@ -1,0 +1,175 @@
+.TH GSP670 1 "2026-10-11" "0.1.0" "GSP 670 Control Utility"
+.SH NAME
+gsp670 \- EPOS|Sennheiser GSP 670 headset control utility for Linux
+.SH SYNOPSIS
+.B gsp670
+[\fIOPTIONS\fP] \fICOMMAND\fP [\fIARGS\fP]...
+.PP
+.B gsp670
+\fBinfo\fP [\fB\-\-json\fP]
+.PP
+.B gsp670
+\fBstatus\fP [\fB\-\-json\fP]
+.PP
+.B gsp670
+\fBbattery\fP [\fB\-\-json\fP]
+.PP
+.B gsp670
+\fBcontrols\fP \fIlist\fP | \fIget\fP \fICONTROL\fP | \fIset\fP \fICONTROL\fP \fIVALUE\fP
+.PP
+.B gsp670
+\fBmonitor\fP
+.PP
+.B gsp670
+\fBevents\fP [\fB\-\-count\fP \fIN\fP]
+.PP
+.B gsp670
+\fBprotocol\fP \fIinspect\fP
+.PP
+.B gsp670
+\fBlog\fP [\fB\-\-level\fP \fILEVEL\fP] [\fB\-\-message\fP]
+.PP
+.B gsp670
+\fBtest\fP \fIaudio\fP
+.PP
+.B gsp670
+{\fB\-\-version\fP | \fB\-\-help\fP}
+.SH DESCRIPTION
+.B gsp670
+is a command-line utility for controlling the EPOS|Sennheiser GSP 670 wireless gaming headset from Linux. It communicates with the headset via the GSA 70 USB dongle using a reverse-engineered HID protocol.
+.PP
+The utility can display device information, monitor control events, show battery status, and enumerate available audio devices.
+.SH OPTIONS
+.TP
+.BR \-d ", " \-\-device " " \fIauto|dongle|headset\fP
+Select which device to communicate with. Defaults to \fBauto\fP which tries the dongle first, then the headset.
+.TP
+.BR \-v ", " \-\-version
+Show the program version and exit.
+.TP
+.BR \-h ", " \-\-help
+Show the help message and exit.
+.SH COMMANDS
+.SS info
+Show device information including HID devices and audio devices.
+.TP
+.B \-\-json
+Output in JSON format.
+.SS status
+Show current headset status including notifications received.
+.TP
+.B \-\-json
+Output in JSON format.
+.SS battery
+Show battery status and LED indicator reference.
+.TP
+.B \-\-json
+Output in JSON format.
+.SS controls
+Control operations.
+.TP
+.B list
+List all available controls.
+.TP
+.B get \fICONTROL\fP
+Get the current value of a control (\fBvolume\fP, \fBmute\fP, or \fBsidetone\fP).
+.TP
+.B set \fICONTROL\fP \fIVALUE\fP
+Set a control to a new value.
+.SS monitor
+Monitor control events in real-time. Press Ctrl+C to exit.
+.TP
+.B \-\-watch ", " \-w " " \fIall|battery|link\fP
+Watch mode: \fIall\fP (default) shows every parsed frame and event,
+\fIbattery\fP shows battery events with a 30 s poll fallback, \fIlink\fP
+shows headset link/sub-device changes.
+.TP
+.B \-\-timeout ", " \-t " " \fISECONDS\fP
+Exit automatically after SECONDS (0 = run forever, default).
+.SS events
+Show raw HID events from the device. Press Ctrl+C to exit.
+.TP
+.B \-\-count \fIN\fP
+Capture exactly \fIN\fP events then exit automatically.
+.SS protocol inspect
+Show all known protocol opcodes and their status.
+.SS log
+Set logging level for debugging.
+.TP
+.B \-\-level ", " \-l " " \fIDEBUG|INFO|WARNING|ERROR|CRITICAL\fP
+Set the logging level. Defaults to INFO.
+.TP
+.B \-\-message ", " \-m
+Show a test message at each level.
+.SS test audio
+Run full-duplex audio quality tests.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Error (device not found, communication error, or invalid arguments).
+.SH EXAMPLES
+.TP
+Show device information:
+.B gsp670 info
+.TP
+Show battery status:
+.B gsp670 battery
+.TP
+List controls:
+.B gsp670 controls list
+.TP
+Get volume level:
+.B gsp670 controls get volume
+.TP
+Monitor control events:
+.B gsp670 monitor
+.TP
+Capture 10 events and exit:
+.B gsp670 events --count 10
+.TP
+Enable debug logging:
+.B gsp670 log --level DEBUG
+.TP
+Show version:
+.B gsp670 --version
+.SH FILES
+.TP
+.I ~/.config/gsp670/
+User configuration directory (if implemented).
+.TP
+.I /etc/udev/rules.d/60-gsp670.rules
+System udev rules for device access.
+.SH REQUIREMENTS
+.TP
+Linux with Python 3.8 or higher
+.TP
+hidapi Python library
+.TP
+EPOS|Sennheiser GSP 670 headset with GSA 70 USB dongle
+.SH BUGS
+Report bugs to: https://github.com/OWNER/gsp670-linux/issues
+.PP
+Battery status may not be available on all firmware versions.
+.PP
+Some systems may require udev rules to access the device.
+.SH SEE ALSO
+.TP
+Project documentation:
+.BR \%https://github.com/OWNER/gsp670-linux
+.TP
+Linux audio configuration:
+.BR \%https://docs.pipewire.org/
+.TP
+ALSA configuration:
+.BR \%https://www.alsa-project.org/
+.SH AUTHORS
+GSP 670 Reverse Engineering Project
+.PP
+This is an independent reverse engineering project and is not affiliated with EPOS or Sennheiser.
+.SH LICENSE
+MIT License
+.PP
+Copyright \(co 2026 GSP 670 Reverse Engineering Project

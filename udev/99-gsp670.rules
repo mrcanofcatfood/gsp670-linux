@@ -1,0 +1,21 @@
+# udev rules for EPOS|Sennheiser GSP 670 headset and GSA 70 dongle
+#
+# Install to /etc/udev/rules.d/99-gsp670.rules
+# Then run: sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# This gives members of the 'audio' group access to hidraw devices
+
+# EPOS|Sennheiser GSA 70 dongle (PID 0x1395:0x0300)
+# Capricorn HID interface for control protocol
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="0300", GROUP="audio", MODE="0660", SYMLINK+="gsp670-dongle"
+
+# EPOS|Sennheiser GSP 670 headset in USB device mode (PID 0x1395:0x008a)
+# Capricorn HID interface
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="008a", GROUP="audio", MODE="0660", SYMLINK+="gsp670-headset"
+
+# EPOS GSA 70 in firmware upgrade mode (various PIDs)
+# PIDs: 0x8300, 0x8303, 0x8089, 0x808A
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="8300", GROUP="audio", MODE="0660"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="8303", GROUP="audio", MODE="0660"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="8089", GROUP="audio", MODE="0660"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1395", ATTRS{idProduct}=="808a", GROUP="audio", MODE="0660"

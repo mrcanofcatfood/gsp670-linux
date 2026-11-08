@@ -1,0 +1,33 @@
+[Unit]
+Description=GSP 670 Device Monitor and D-Bus Service
+Documentation=https://github.com/OWNER/gsp670-linux
+After=local-fs.target
+Wants=systemd-udev-settle.service
+
+[Service]
+Type=simple
+
+# The daemon needs the optional D-Bus extra:
+#     pip install 'gsp670[dbus]'
+# and the gsp670 package to be importable. When the package is installed
+# system-wide this is simply:
+#     ExecStart=/usr/bin/python3 -m gsp670.daemon
+ExecStart=/usr/bin/python3 -m gsp670.daemon --device dongle --bus system
+
+Restart=on-failure
+RestartSec=5
+WatchdogSec=30
+
+# Security hardening
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/gsp670
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gsp670-daemon
+
+[Install]
+WantedBy=multi-user.target

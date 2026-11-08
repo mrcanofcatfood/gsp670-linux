@@ -1,0 +1,55 @@
+{
+    "output": {
+        "blocklist": [],
+        "plugins_order": [
+            "equalizer#0",
+            "stereo_tools#0",
+            "convolver#0"
+        ],
+        "equalizer#0": {
+            "bypass": false,
+            "input-gain": 0.0,
+            "output-gain": 0.0,
+            "num-bands": 10,
+            "left": {
+                "band0": {"frequency": 31.25, "gain": 1.5, "q": 1.41},
+                "band1": {"frequency": 62.5, "gain": 1.0, "q": 1.41},
+                "band2": {"frequency": 125.0, "gain": 0.5, "q": 1.41},
+                "band3": {"frequency": 250.0, "gain": 0.0, "q": 1.41},
+                "band4": {"frequency": 500.0, "gain": -0.5, "q": 1.41},
+                "band5": {"frequency": 1000.0, "gain": 0.0, "q": 1.41},
+                "band6": {"frequency": 2000.0, "gain": 0.8, "q": 1.41},
+                "band7": {"frequency": 4000.0, "gain": 1.8, "q": 1.41},
+                "band8": {"frequency": 8000.0, "gain": 1.0, "q": 1.41},
+                "band9": {"frequency": 16000.0, "gain": 0.5, "q": 1.41}
+            },
+            "right": {
+                "band0": {"frequency": 31.25, "gain": 1.5, "q": 1.41},
+                "band1": {"frequency": 62.5, "gain": 1.0, "q": 1.41},
+                "band2": {"frequency": 125.0, "gain": 0.5, "q": 1.41},
+                "band3": {"frequency": 250.0, "gain": 0.0, "q": 1.41},
+                "band4": {"frequency": 500.0, "gain": -0.5, "q": 1.41},
+                "band5": {"frequency": 1000.0, "gain": 0.0, "q": 1.41},
+                "band6": {"frequency": 2000.0, "gain": 0.8, "q": 1.41},
+                "band7": {"frequency": 4000.0, "gain": 1.8, "q": 1.41},
+                "band8": {"frequency": 8000.0, "gain": 1.0, "q": 1.41},
+                "band9": {"frequency": 16000.0, "gain": 0.5, "q": 1.41}
+            }
+        },
+        "stereo_tools#0": {
+            "bypass": false,
+            "input-gain": 0.0,
+            "output-gain": 0.0,
+            "mode": "lr > ms",
+            "mutel": false,
+            "muter": false
+        },
+        "convolver#0": {
+            "bypass": false,
+            "input-gain": 0.0,
+            "output-gain": -1.0,
+            "kernel-path": "",
+            "ir-width": 0
+        }
+    }
+}
