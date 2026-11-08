@@ -20,7 +20,7 @@ All EPOS | Sennheiser gaming devices share the vendor ID `0x1395`.
 | Device | Mode | PID (hex) | PID (dec) |
 |---|---|---|---|
 | GSA 70 dongle | wireless 2.4 GHz | `0x0300` | 768 |
-| GSP 670 headset | wired USB-C | `0x008A` | 138 |
+| GSP 670 headset | wired Micro-USB | `0x008A` | 138 |
 | GSP 670 headset | firmware-update mode | `0x808A`, `0x8089` | — |
 | GSA 70 dongle | firmware-update mode | `0x8300`, `0x8303` | — |
 
@@ -32,7 +32,7 @@ version. Do not match on the product string — match on `1395:0300`.
 
 | Type | Description |
 |---|---|
-| WiredUSB | Headset connected directly by USB-C |
+| WiredUSB | Headset connected directly by Micro-USB |
 | Wireless | Headset connected through the GSA 70 dongle |
 
 ---

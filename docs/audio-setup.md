@@ -187,5 +187,5 @@ The dongle adds ~1.4 s. Measure it if you want to confirm:
 speaker-test -c 2 -t wav -l 1 test.wav
 ```
 
-See [limitations.md](limitations.md) §1 — use the wired USB-C connection for
+See [limitations.md](limitations.md) §1 — use the wired Micro-USB connection for
 gaming.

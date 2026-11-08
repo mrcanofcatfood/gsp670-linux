@@ -100,4 +100,4 @@ First public release.
   `usb-gaming-headset.conf` ALSA profile set that ships with PulseAudio/ALSA.
   This project ships no custom ALSA profile and no kernel module.
 - The GSA 70 dongle firmware adds roughly 1.4 seconds of audio latency. The
-  wired USB-C mode has about 44 ms. See `docs/limitations.md`.
+  wired Micro-USB mode has about 44 ms. See `docs/limitations.md`.

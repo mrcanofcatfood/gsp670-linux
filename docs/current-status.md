@@ -18,7 +18,7 @@ and this document win.
 | Sub-device count (`0x04`) | ✅ (returns `0`) | `00 00`; not a reliable link indicator (§3) |
 | Unsolicited device→host events (`00 01` / `ff 01`) | ✅ | captured on battery-button press; [verified-secom-opcodes.md](verified-secom-opcodes.md) §5.2 |
 | Wireless audio (Game stereo + Chat mono + mic) | ✅ | stock `usb-gaming-headset.conf` profile set; see [install.md](install.md) |
-| Wired USB-C audio (48 kHz playback / 16 kHz capture, full-duplex) | ✅ | [compatibility.md](compatibility.md); ~44 ms latency |
+| Wired Micro-USB audio (48 kHz playback / 16 kHz capture, full-duplex) | ✅ | [compatibility.md](compatibility.md); ~44 ms latency |
 | Python library + CLI (`info`, `status`, `battery`, `controls`, `monitor`, `events`, `protocol inspect`) | ✅ | 220 unit/integration tests pass; `monitor`/`events` name decoded event keys live (`Frame.event_name`, `format_event_key`, `EVENT_PAYLOAD`) |
 
 ## 2. Blocked (confirmed, not a software problem)
@@ -26,7 +26,7 @@ and this document win.
 | Item | Verdict |
 |---|---|
 | Firmware update to fix the 12 Mbps USB bug | **Permanently blocked** — no fixed firmware exists publicly; the dongle already runs the final known release. Nothing to flash even with a complete protocol. |
-| Wireless-mode latency (~1.4 s) | **Unfixable in software** — GSA 70 Full-Speed USB PHY / bridge-buffering bug. Use wired USB-C. See [limitations.md](limitations.md) §1. |
+| Wireless-mode latency (~1.4 s) | **Unfixable in software** — GSA 70 Full-Speed USB PHY / bridge-buffering bug. Use wired Micro-USB. See [limitations.md](limitations.md) §1. |
 | FWU over the SECOM transport | **Wrong transport** — firmware update uses a separate Rtx channel (64-byte `0x58`-prefixed reports), not SECOM `04 00`. The `0x4F00` SECOM send NAKed for that reason. The real request shape is `00 4F <A> <B>` with expected response `0x4f01`. FWU entry also only fires from an orchestrated mode transition (with USB re-enumeration between stages and a device firmware-version precondition), which a single raw HID write cannot reproduce. Flashing is still moot — no fixed firmware exists. |
 | Feature-report write path (`HIDIOCSFEATURE`) | Not available — returns `EINVAL`; host→device is control `SET_REPORT` only. |
 

@@ -120,7 +120,7 @@ conclusion.
 The GSA 70 dongle adds roughly 1.4 seconds of audio latency. The cause is a
 buffering defect in the dongle's USB link handling, present in every
 firmware release that exists. It is not fixable in software, and the
-workaround is to use the wired USB-C connection, which has about 44 ms
+workaround is to use the wired Micro-USB connection, which has about 44 ms
 latency. See [../limitations.md](../limitations.md) §1.
 
 ### Some vendor features were identified but not implemented

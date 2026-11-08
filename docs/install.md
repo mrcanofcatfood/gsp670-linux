@@ -6,7 +6,7 @@
 sudo ./scripts/install.sh
 ```
 
-Then unplug and replug the dongle (or the headset's USB-C cable).
+Then unplug and replug the dongle (or the headset's Micro-USB cable).
 
 Verify:
 
@@ -164,9 +164,9 @@ Or, for the D-Bus daemon as well:
 python3 -m pip install --user '.[dbus]'
 ```
 
-## Using the wired USB-C connection
+## Using the wired Micro-USB connection
 
-The headset can be plugged in directly with the included USB-C cable. On Linux
+The headset can be plugged in directly with the included Micro-USB cable. On Linux
 it enumerates as `1395:008a` instead of the dongle's `1395:0300`, and it has
 far lower latency (~44 ms versus ~1.4 s).
 

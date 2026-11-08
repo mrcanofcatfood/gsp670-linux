@@ -17,7 +17,7 @@ accumulates.
 the same behaviour. The buffer size is baked into the firmware, and the
 firmware cannot be updated — see limitation 3.
 
-**What to do.** Use the wired USB-C connection for anything latency-sensitive.
+**What to do.** Use the wired Micro-USB connection for anything latency-sensitive.
 It delivers about **44 ms** latency, which is fine for gaming. The dongle is
 still useful if you want to move around; accept the delay for voice chat.
 
@@ -26,7 +26,7 @@ On Linux the two modes are distinct USB devices:
 | Mode | USB ID | Latency |
 |---|---|---|
 | GSA 70 dongle (wireless) | `1395:0300` | ~1.4 s |
-| GSP 670 headset, wired USB-C | `1395:008a` | ~44 ms |
+| GSP 670 headset, wired Micro-USB | `1395:008a` | ~44 ms |
 
 Both work. This project supports both.
 
@@ -135,7 +135,7 @@ unit.
 
 | Limitation | Workaround |
 |---|---|
-| Dongle latency ~1.4 s | Use the wired USB-C connection (~44 ms) |
+| Dongle latency ~1.4 s | Use the wired Micro-USB connection (~44 ms) |
 | No battery percentage | Use the headset's LED indicator |
 | No firmware updates | Nothing to do — the firmware is already final |
 | No device-side 7.1 | Host-side virtualisation (this repo) |

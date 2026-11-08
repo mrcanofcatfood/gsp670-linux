@@ -28,7 +28,7 @@ cd gsp670-linux
 sudo ./scripts/install.sh
 ```
 
-Then **unplug and replug** the dongle (or the headset's USB-C cable).
+Then **unplug and replug** the dongle (or the headset's Micro-USB cable).
 
 Verify:
 
@@ -133,7 +133,7 @@ The GSA 70 dongle's USB Full-Speed PHY has a buffering bug in its firmware
 that adds roughly **1.4 seconds** of latency. Every known firmware release
 (3.3.43) has it. This makes the dongle usable for chat but not for games.
 
-**Use the wired USB-C connection** for gaming: it has about **44 ms** latency
+**Use the wired Micro-USB connection** for gaming: it has about **44 ms** latency
 and is the better choice anyway. The dongle is still useful for walking
 around.
 

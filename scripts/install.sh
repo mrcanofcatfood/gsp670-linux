@@ -482,7 +482,7 @@ print_summary() {
     ok "Installation finished."
     echo
     info "Next steps:"
-    echo "  1. Unplug and replug the dongle (or the headset's USB-C cable)."
+    echo "  1. Unplug and replug the dongle (or the headset's Micro-USB cable)."
     echo "  2. Verify audio:  wpctl status | grep -i 'GSA 70'"
     echo "     You should see a stereo 'Game' sink and a mono 'Chat' sink."
     echo "  3. Run the doctor for a full check:"
@@ -492,7 +492,7 @@ print_summary() {
     fi
     echo
     warn "Known limitation: the wireless dongle has a firmware bug that adds"
-    warn "about 1.4 s of audio latency. Wired USB-C mode has ~44 ms latency."
+    warn "about 1.4 s of audio latency. Wired Micro-USB mode has ~44 ms latency."
     echo
 }
 

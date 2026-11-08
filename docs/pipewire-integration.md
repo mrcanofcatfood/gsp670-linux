@@ -20,7 +20,7 @@ PCMs** and one capture PCM:
 | Mic input | `alsa_input.usb-Sennheiser_EPOS_GSA_70-00.mono-chat` | `hw:C,0,0` | mono 16 kHz |
 
 The card's PipeWire object is `alsa_card.usb-Sennheiser_EPOS_GSA_70-00`
-(description "EPOS GSA 70"). In **wired USB-C** mode the headset (`1395:008a`)
+(description "EPOS GSA 70"). In **wired Micro-USB** mode the headset (`1395:008a`)
 produces the same shape with `GSP_670` in the name.
 
 > Do not hardcode the card index (`hw:2`) — it moves. Match on the node name.

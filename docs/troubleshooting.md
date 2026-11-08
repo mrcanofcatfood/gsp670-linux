@@ -17,7 +17,7 @@ identified by it.
 |---|---|---|
 | No sound at all, no sink in `wpctl status` | the ALSA card failed to register | `sudo /usr/lib/gsp670/gsp670-audio-guard.sh` |
 | Only one mono device, no "Game" | kernel older than 5.14.15 | upgrade the kernel |
-| Voice is delayed by ~1.4 s | the dongle's firmware latency bug | use the wired USB-C connection |
+| Voice is delayed by ~1.4 s | the dongle's firmware latency bug | use the wired Micro-USB connection |
 | Discord says "no audio input detected" | idle-suspend churn, or chat routed through a DSP sink | install the WirePlumber drop-in; keep chat on the hardware nodes |
 | Starting one app's audio stops another's | same as above | same as above |
 | `gsp670` says "device not found" | udev rules missing, or user not in the `audio` group | `ls /etc/udev/rules.d/99-gsp670.rules`; `groups \| grep audio` |
@@ -62,7 +62,7 @@ DeviceNotFoundError: GSP 670 headset not found
 
 **Solution:** 
 - For wireless mode, use the GSA 70 dongle
-- For wired mode, connect the headset directly via USB-C
+- For wired mode, connect the headset directly via Micro-USB
 - For upgrade mode, you may need to reflash firmware (not covered here)
 
 #### 3. USB enumeration issue
@@ -241,12 +241,12 @@ device.exchange(0x4F12, timeout_ms=1000)  # 1 second timeout
 #### 1. Using dongle PID instead of headset PID
 **Check:** `lsusb` should show PID 0x008A for wired mode
 
-**Solution:** Connect headset directly via USB-C cable (not through dongle)
+**Solution:** Connect headset directly via Micro-USB cable (not through dongle)
 
-#### 2. USB-C cable issues
+#### 2. Micro-USB cable issues
 **Check:** Try a different cable
 
-**Solution:** Some USB-C cables are charge-only
+**Solution:** Some Micro-USB cables are charge-only
 
 #### 3. Port power limitations
 **Check:** Try a different USB port (preferably USB 3.0)

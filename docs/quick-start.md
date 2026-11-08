@@ -7,7 +7,7 @@ Get the EPOS|Sennheiser GSP 670 headset working on Linux.
 - Linux kernel **5.14.15 or newer**
 - PipeWire (0.3.38+) or PulseAudio (16+)
 - `wireplumber` (recommended)
-- The headset with either the GSA 70 dongle or the USB-C cable
+- The headset with either the GSA 70 dongle or the Micro-USB cable
 
 ## Step 1: Install
 
@@ -31,7 +31,7 @@ manual installation.
 
 ## Step 2: Reconnect the device
 
-Unplug and replug the GSA 70 dongle (or the headset's USB-C cable). The ALSA
+Unplug and replug the GSA 70 dongle (or the headset's Micro-USB cable). The ALSA
 card is created at plug-in time.
 
 ## Step 3: Verify the audio devices
@@ -142,7 +142,7 @@ sink — the doctor script lists any such attachment.
 ### Audio is delayed by more than a second
 
 That is the dongle's firmware latency bug, not a misconfiguration. Use the
-wired USB-C connection for gaming. See [limitations.md](limitations.md) §1.
+wired Micro-USB connection for gaming. See [limitations.md](limitations.md) §1.
 
 ## Command reference
 

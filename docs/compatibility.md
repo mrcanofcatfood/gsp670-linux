@@ -8,13 +8,18 @@ Hardware, kernel and distribution compatibility for the GSP 670 / GSA 70.
 
 | Device | USB ID | Mode | Status | Notes |
 |---|---|---|---|---|
-| GSP 670 headset | `1395:008a` | wired USB-C | **works** | ~44 ms latency, 48 kHz stereo playback / 16 kHz mono capture |
+| GSP 670 headset | `1395:008a` | wired Micro-USB | **works** | ~44 ms latency, 48 kHz stereo playback / 16 kHz mono capture |
 | GSA 70 dongle | `1395:0300` | wireless 2.4 GHz | **works, with high latency** | ~1.4 s latency from a firmware bug |
 | GSA 70 dongle | `1395:0300` | control interface | **works** | vendor HID protocol, for sidetone and friends |
 | GSA 70 (upgrade PIDs) | `1395:8089`, `1395:808a`, `1395:8300`, `1395:8303` | firmware update | **blocked** | no firmware update is possible |
 
 The GSP 670 is an **EPOS|Sennheiser** product. It is not a SteelSeries device,
 despite the similar model numbers.
+
+> **Connector note:** the headset's wired port is **Micro-USB**, not USB-C.
+> The cable supplied with it is USB-A to Micro-USB, and it doubles as the
+> charging cable — the headset plays audio over the same connection. There is
+> no USB-C or 3.5 mm jack on the headset.
 
 ## Audio format
 
