@@ -135,6 +135,21 @@ wireplumber_dir() {
     fi
 }
 
+# have_wireplumber -> 0 if WirePlumber appears to be installed.
+#
+# WirePlumber's config directory lives in different places depending on the
+# distribution: /etc/wireplumber on Debian/Fedora, /usr/share/wireplumber on
+# Arch, and ~/.config/wireplumber when installed per-user.
+have_wireplumber() {
+    local d
+    for d in /etc/wireplumber /usr/share/wireplumber "$HOME/.config/wireplumber"; do
+        [ -d "$d" ] && return 0
+    done
+    # Fall back to asking the session manager itself.
+    command -v wpctl >/dev/null 2>&1 && return 0
+    return 1
+}
+
 pipewire_dir() {
     if [ "$USER_SCOPE" -eq 1 ]; then
         echo "$HOME/.config/pipewire/pipewire.conf.d"
@@ -162,6 +177,8 @@ do_uninstall() {
                 systemctl disable --now gsp670-audio-guard.service 2>/dev/null || true
             fi
         fi
+        # Clean up a unit left by an older install location.
+        remove_file /etc/systemd/system/gsp670-audio-guard.service
         if command -v udevadm >/dev/null 2>&1; then
             run udevadm control --reload-rules
         fi
@@ -212,6 +229,12 @@ do_install() {
         install_file "$REPO_ROOT/systemd/gsp670-audio-guard.service" \
             "$PREFIX/lib/systemd/system/gsp670-audio-guard.service" 0644
 
+        # Remove a unit left behind by an older install location.
+        if [ "$PREFIX" = "/usr" ] && [ -f /etc/systemd/system/gsp670-audio-guard.service ]; then
+            dim "Removing the stale unit in /etc/systemd/system"
+            rm -f /etc/systemd/system/gsp670-audio-guard.service
+        fi
+
         if command -v systemctl >/dev/null 2>&1; then
             run systemctl daemon-reload
             run systemctl enable --now gsp670-audio-guard.service
@@ -227,17 +250,35 @@ do_install() {
     # This is the important one: without it WirePlumber suspends the idle
     # USB-audio node and the resulting resume race breaks Discord and
     # EasyEffects.
-    if [ -d "$(dirname "$(wireplumber_dir)")" ] || [ "$USER_SCOPE" -eq 1 ]; then
+    if have_wireplumber; then
         info "Installing the WirePlumber configuration"
         install_file "$REPO_ROOT/contrib/wireplumber/50-gsp670.conf" \
             "$(wireplumber_dir)/50-gsp670.conf" 0644
+
+        # Restart WirePlumber so it picks the drop-in up. This has to happen
+        # in the user's session: root has no user D-Bus session.
         if command -v systemctl >/dev/null 2>&1; then
-            if [ "$USER_SCOPE" -eq 1 ]; then
+            local wp_user=""
+            local wp_home=""
+            if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+                wp_user="$SUDO_USER"
+                wp_home="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+            fi
+            if [ -n "$wp_user" ]; then
+                if run sudo -u "$wp_user" -H \
+                        XDG_RUNTIME_DIR="/run/user/$(id -u "$wp_user")" \
+                        systemctl --user restart wireplumber 2>/dev/null; then
+                    ok "restarted WirePlumber for $wp_user"
+                else
+                    warn "Could not restart WirePlumber; run this as $wp_user:"
+                    warn "  systemctl --user restart wireplumber"
+                fi
+            elif [ "$USER_SCOPE" -eq 1 ]; then
                 run systemctl --user restart wireplumber 2>/dev/null \
                     || warn "Could not restart the user WirePlumber instance"
             else
-                run systemctl --user restart wireplumber 2>/dev/null \
-                    || warn "Could not restart WirePlumber (is a user session active?)"
+                warn "Restart WirePlumber to apply the configuration:"
+                warn "  systemctl --user restart wireplumber"
             fi
         fi
     else
@@ -298,6 +339,16 @@ install_python() {
         return 0
     fi
 
+    # When run via sudo, the Python package must be installed as the
+    # *invoking* user, not as root — otherwise it lands in root's user site
+    # and the user cannot run the `gsp670` command.
+    local run_as_user=""
+    local run_as_home=""
+    if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+        run_as_user="$SUDO_USER"
+        run_as_home="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+    fi
+
     # Find a usable pip. Prefer an explicitly requested interpreter's pip so
     # that `PIP=... make install` or a virtualenv's pip is used when active.
     local pip_cmd=""
@@ -320,6 +371,29 @@ install_python() {
     fi
 
     if [ -z "$pip_cmd" ]; then
+        # No pip at all. Offer to install it — it is a standard package on
+        # every supported distribution.
+        local pip_pkg
+        case "$PKG_MANAGER" in
+            pacman) pip_pkg="python-pip" ;;
+            apt)    pip_pkg="python3-pip" ;;
+            dnf)    pip_pkg="python3-pip" ;;
+            zypper) pip_pkg="python3-pip" ;;
+            apk)    pip_pkg="py3-pip" ;;
+            xbps)   pip_pkg="python3-pip" ;;
+            emerge) pip_pkg="dev-python/pip" ;;
+            *)      pip_pkg="" ;;
+        esac
+        if [ -n "$pip_pkg" ] && [ "$DRY_RUN" -eq 0 ]; then
+            info "pip not found; installing $pip_pkg"
+            if gsp670_pkg_install "$pip_pkg" 2>/dev/null; then
+                ok "installed $pip_pkg"
+                pip_cmd="python3 -m pip"
+            fi
+        fi
+    fi
+
+    if [ -z "$pip_cmd" ]; then
         warn "pip not found; skipping the Python library"
         dim "  Install manually: python3 -m pip install --user $REPO_ROOT"
         return 0
@@ -331,16 +405,63 @@ install_python() {
         return 0
     fi
 
-    if $pip_cmd install --user "$REPO_ROOT" 2>/dev/null; then
+    # Run the pip install as the target user when we are root.
+    local as_user=()
+    if [ -n "$run_as_user" ]; then
+        as_user=(sudo -u "$run_as_user" -H)
+    fi
+
+    # Modern distributions mark the system Python as "externally managed"
+    # (PEP 668), which makes a plain `pip install` fail. Try the usual
+    # escape hatches in order of preference.
+    if "${as_user[@]}" $pip_cmd install --user "$REPO_ROOT" 2>/dev/null; then
         ok "installed the gsp670 package (user site)"
+        note_user_path "$run_as_home"
         return 0
     fi
-    if $pip_cmd install "$REPO_ROOT" 2>/dev/null; then
+    if "${as_user[@]}" $pip_cmd install --user --break-system-packages \
+        "$REPO_ROOT" 2>/dev/null; then
+        ok "installed the gsp670 package (user site, PEP 668 override)"
+        note_user_path "$run_as_home"
+        return 0
+    fi
+    if "${as_user[@]}" $pip_cmd install "$REPO_ROOT" 2>/dev/null; then
         ok "installed the gsp670 package (system)"
         return 0
     fi
-    warn "pip install failed; try installing manually:"
-    dim "  $pip_cmd install --user $REPO_ROOT"
+
+    # Last resort: a self-contained virtualenv under ~/.local, so the install
+    # works even where the system Python is locked down.
+    if command -v python3 >/dev/null 2>&1 && python3 -m venv --help >/dev/null 2>&1; then
+        local venv_dir
+        if [ -n "$run_as_home" ]; then
+            venv_dir="$run_as_home/.local/share/gsp670/venv"
+        else
+            venv_dir="$HOME/.local/share/gsp670/venv"
+        fi
+        info "falling back to a virtualenv at $venv_dir"
+        if python3 -m venv "$venv_dir" 2>/dev/null \
+           && "$venv_dir/bin/pip" install -q "$REPO_ROOT" 2>/dev/null; then
+            ok "installed the gsp670 package into $venv_dir"
+            dim "  Add it to your PATH:  export PATH=\"$venv_dir/bin:\$PATH\""
+            return 0
+        fi
+    fi
+
+    warn "pip install failed; install it manually with one of:"
+    dim "  $pip_cmd install --user --break-system-packages $REPO_ROOT"
+    dim "  pipx install $REPO_ROOT"
+}
+
+# Tell the user where the console script landed, if it is not on their PATH.
+note_user_path() {
+    local home="${1:-$HOME}"
+    [ -n "$home" ] || return 0
+    local bindir="$home/.local/bin"
+    if [ -x "$bindir/gsp670" ] && ! echo ":$PATH:" | grep -q ":$bindir:"; then
+        dim "  The 'gsp670' command is at $bindir — add it to your PATH:"
+        dim "    export PATH=\"$bindir:\$PATH\""
+    fi
 }
 
 install_dbus_stack() {
