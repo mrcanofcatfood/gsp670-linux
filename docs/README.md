@@ -34,6 +34,7 @@ format; they contain no vendor code or binary data.
 | [protocol-reference.md](protocol-reference.md) | Frame, marker and CRC reference |
 | [opcode-database.md](opcode-database.md) | Known opcode definitions |
 | [hid-protocol.md](hid-protocol.md) | HID descriptor and interface layout |
+| [analysis/](analysis/) | The working notes and evidence behind the above |
 
 ## Status and internals
 

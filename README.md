@@ -207,6 +207,19 @@ python3 -m venv .venv
 The unit and integration tests need no hardware. The tests under
 `tests/hardware/` need a physically connected device.
 
+### Before publishing
+
+The repository URL is a placeholder. Replace `OWNER` with your GitHub
+username in these files:
+
+```bash
+grep -rl OWNER --exclude-dir=.venv --exclude-dir=.git . \
+  | xargs sed -i 's|OWNER|<your-username>|g'
+```
+
+That covers `pyproject.toml`, `README.md`, the systemd units, the packaging
+rules in `rules.d/`, and the docs.
+
 ## Uninstall
 
 ```bash

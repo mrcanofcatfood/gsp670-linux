@@ -189,4 +189,4 @@ Host                           Device
 ## Reference
 
 - Protocol implementation: `src/gsp670/protocol.py`
-- Analysis document: `analysis/direct-hid-probing.md`
+- Analysis document: `docs/analysis/direct-hid-probing.md`

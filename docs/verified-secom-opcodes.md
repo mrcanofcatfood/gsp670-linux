@@ -277,7 +277,7 @@ Observed on a **battery-percent button press**:
 > `00 01` payload `1d 00 f0 00 01 00` is therefore word0 `0x001d`,
 > word1 `0x00f0`, variant `1` — an **unhandled** id (no dispatcher case), so the
 > earlier "VirtualButtonEvent" label on it was wrong. The real virtual-button
-> event is `08 00 f0 00 03 00`. See `analysis/session-handshake.md` §6.1.
+> event is `08 00 f0 00 03 00`. See `docs/analysis/session-handshake.md` §6.1.
 
 * `00 01` frames arrive in a **burst** (one press produced ~70 frames over
   ~20 s in one capture; a later capture produced 1–3 frames per press).
@@ -356,14 +356,14 @@ not independently confirmed. This test closed that gap:
 
 **Conclusion:** the §6.1 battery keys exist in the receive-side dispatcher
 table but were **never observed to fire on hardware**. **Static closure
-(same day, Ghidra headless — §6.2 of `analysis/session-handshake.md`):** the
+(same day, Ghidra headless — §6.2 of `docs/analysis/session-handshake.md`):** the
 re-opened `set_battery_events` `[+0x74]` slot is a **read-only getter**, and
 an exhaustive caller check of the two Rtx wire builders
 (`split_request_into_packets` `0x67a070`, `send_request_without_response`
 `0x679ee0`) shows no event-enable code among their callers — so battery pushes
 are **not gated by a host enable command**. GSA 70 firmware 3.14.2 simply does
 not emit battery telemetry on the passive channel, and no GET serves the value.
-Link/button events are unaffected. See `analysis/session-handshake.md`
+Link/button events are unaffected. See `docs/analysis/session-handshake.md`
 Rev 3 / §6.2 / §6.4.
 
 ## 6. Using it from Python
@@ -405,7 +405,7 @@ frame(SecomOpcode.SET_SIDETONE, secom_request(SecomOpcode.SET_SIDETONE, 5))
   values are **push-only events**; the legacy Capricorn GETs are a superseded
   path the dongle transport-ACKs but does not serve. There is no missing request
   parameter (the host frame is byte-identical to the service's). See
-  `analysis/session-handshake.md` §1/§3.
+  `docs/analysis/session-handshake.md` §1/§3.
 * The `0x14`/`0x15` link ACKs carry reply-class `0x0008` (not `req >> 2` = 5),
   unlike every other ACK observed — cause unknown.
 * **RESOLVED (Phase 3, Ghidra; corrected 2026-10-13) — the event key.**
@@ -419,7 +419,7 @@ frame(SecomOpcode.SET_SIDETONE, secom_request(SecomOpcode.SET_SIDETONE, 5))
   `0a 00 f0 00 02/03/04 00`, input `08 00 f0 00 03/07 00`, ANC
   `17 00 f0 00 01/02 00`, component `23 00 f0 00 01 00`, connection/service
   `06 00 f0 00 …` / `01 00 f0 00 …`). Full 22-key table with value schemas:
-  `analysis/session-handshake.md` §6.1. So `1d 00 f0 00 …` reads as word0
+  `docs/analysis/session-handshake.md` §6.1. So `1d 00 f0 00 …` reads as word0
   `0x001d`, word1 `0x00f0`, variant `1` — an **unhandled** id (no dispatcher
   case), not VirtualButton.
 * **Payload structure (corrected):** the key is `<w0> <w1> [<variant>]`; after
@@ -433,8 +433,8 @@ frame(SecomOpcode.SET_SIDETONE, secom_request(SecomOpcode.SET_SIDETONE, 5))
   per-command vtable slot, e.g. `[+0x74]` = `set_battery_events`, arg
   `[obj+0x338]` = 16-bit slave id). These are **host-side bookkeeping only**
   (flag flip + log) — no RTX packet is built (corrected 2026-10-13, GAP-RE-1
-  resolved). See `analysis/session-handshake.md` §6.2.
+  resolved). See `docs/analysis/session-handshake.md` §6.2.
 * **Firmware update is a separate Rtx channel**, not SECOM: `RtxDatagramIo`
   emits 64-byte `0x58`-prefixed, `0xEE`-padded reports; FWU ids are
   `0x4f00`(→`0x4f01`), `0x4f03`(→`0x4f04`), `0x4f06`, `0x4f08`, `0x4f0a`,
-  `0x4f0e`, `0x4f10`, `0xf066`. See `analysis/session-handshake.md` §6.3.
+  `0x4f0e`, `0x4f10`, `0xf066`. See `docs/analysis/session-handshake.md` §6.3.

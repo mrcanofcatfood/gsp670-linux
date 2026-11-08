@@ -16,7 +16,7 @@ the verified evidence in `verified-secom-opcodes.md` and this document win.
 | Identity readback: FW version, serial, device name, device address | ✅ | live: dongle `3.14.2` / `"EPOS GSA 70"`; headset `3.2.6` / `"GSP 670"` |
 | Sub-device count (`0x04`) | ✅ (returns `0`) | `00 00`; not a reliable link indicator (§3) |
 | Unsolicited device→host events (`00 01` / `ff 01`) | ✅ | captured on battery-button press; `docs/verified-secom-opcodes.md` §5.2 |
-| Wired USB-C audio (48 kHz playback / 16 kHz capture, full-duplex) | ✅ | `docs/observations.md`; ~44 ms latency |
+| Wired USB-C audio (48 kHz playback / 16 kHz capture, full-duplex) | ✅ | `docs/compatibility.md`; ~44 ms latency |
 | Python library + CLI (`info`, `status`, `battery`, `controls`, `monitor`, `events`, `protocol inspect`) | ✅ | `70` unit tests pass; `monitor`/`events` name recovered event keys live (`Frame.event_name`, `format_event_key`, `EVENT_PAYLOAD`); `rtx_fwu_packet()`/`rtx_fwu_enable()` build the real FWU report shape |
 
 ## 2. Blocked (confirmed, not a software problem)
@@ -25,7 +25,7 @@ the verified evidence in `verified-secom-opcodes.md` and this document win.
 |---|---|
 | Firmware update to fix the 12 Mbps USB bug | **Permanently blocked** — no fixed firmware exists publicly; dongle already runs the final known release. Nothing to flash even with a complete protocol. |
 | Wireless-mode latency (~1.4 s) | **Unfixable in software** — GSA 70 Full-Speed USB PHY / bridge-buffering bug. Use wired USB-C. |
-| `0x4F00 FWU_ENABLE_REQ` over SECOM | **Wrong transport** — FWU is an **Rtx** channel (`RtxDatagramIo::send_request_without_response`; 64-byte `0x58`-prefixed reports), not SECOM `04 00`. The `0x4F00`/`00 00` SECOM send NAKed for that reason. Real request shape: `00 4F <A> <B>` + expected-response `0x4f01` (`analysis/session-handshake.md` §6.3). FWU entry also only fires from the `ModiFirmwareUpdater` mode dance (`FUN_0068b650` → `FUN_0068b300`; mode 3/5 precondition, 45 s reboot-await, device FW ≥ `1.5.20` EnterDfu gate) — §6.5. Flashing is still moot (no fixed firmware exists). |
+| `0x4F00 FWU_ENABLE_REQ` over SECOM | **Wrong transport** — FWU is an **Rtx** channel (`RtxDatagramIo::send_request_without_response`; 64-byte `0x58`-prefixed reports), not SECOM `04 00`. The `0x4F00`/`00 00` SECOM send NAKed for that reason. Real request shape: `00 4F <A> <B>` + expected-response `0x4f01` (`docs/analysis/session-handshake.md` §6.3). FWU entry also only fires from the `ModiFirmwareUpdater` mode dance (`FUN_0068b650` → `FUN_0068b300`; mode 3/5 precondition, 45 s reboot-await, device FW ≥ `1.5.20` EnterDfu gate) — §6.5. Flashing is still moot (no fixed firmware exists). |
 | Feature-report write path (`HIDIOCSFEATURE`) | Not available — returns `EINVAL`; host→device is control `SET_REPORT` only. |
 
 ## 3. Value GETs — resolved (event-driven, not GET-driven)
@@ -35,7 +35,7 @@ the verified evidence in `verified-secom-opcodes.md` and this document win.
 (auto-power-off) return only `05 30` ACKs, and `0x04` reports `00 00`
 sub-devices.
 
-**Verdict (static, `analysis/session-handshake.md`):** these values are
+**Verdict (static, `docs/analysis/session-handshake.md`):** these values are
 **push-driven device→host events**, not GET replies. The dongle is a
 base-station that delivers telemetry as typed events
 (`Battery_Events_Percentage`, `Battery_Events_ChargingChanged`,
@@ -52,7 +52,7 @@ fixed 4-byte payload per opcode).
   `0x000f` for battery (`12 00 0f 00 03/04 00` = `ChargingChanged`/`Percentage`),
   `0x0007` for ANC-state/tone, `0x001d` for speaker-mic optimised setting,
   `0x0029` for device PDL. All 22 closed keys (+ value schemas) are in
-  `analysis/session-handshake.md` §6.1 and `protocol.EVENT_KEYS` / `EVENT_PAYLOAD`.
+  `docs/analysis/session-handshake.md` §6.1 and `protocol.EVENT_KEYS` / `EVENT_PAYLOAD`.
 - **Hardware caveat (GAP-RE-1b, 2026-10-13):** the "push-driven" verdict holds
   for **link/button** events (`SubDevicesChanged`, `1d 00 f0 00 …` — confirmed
   firing on a power-cycle window) but **battery events never fired** with a
@@ -63,12 +63,12 @@ fixed 4-byte payload per opcode).
   virtual dispatch selects is a **read-only getter** (`FUN_0064b7a0`); the whole
   chain terminates in-process, and an exhaustive caller check of the two Rtx
   wire builders shows no event-enable code among their callers → **no host
-  enable command exists**. See `analysis/session-handshake.md` §6.2.
-- FWU mode dance traced (`analysis/session-handshake.md` §6.5): the two firmware
+  enable command exists**. See `docs/analysis/session-handshake.md` §6.2.
+- FWU mode dance traced (`docs/analysis/session-handshake.md` §6.5): the two firmware
   gates are **distinct** — battery events need headset FW ≥ **2.0.0**
   (`&DAT_008f1c30`, cached at `[obj+0x340]`), EnterDfu needs device FW ≥ **1.5.20**
   (`&DAT_008f1c70`). Both pass on live hardware (`3.2.6` / `3.14.2`).
-- Tracking: `analysis/session-handshake.md`; Phase 2/3 of
+- Tracking: `docs/analysis/session-handshake.md`; Phase 2/3 of
   `.opencode/plan/next-step-reconcile-and-session-gate.md`.
 
 ## 4. Documentation caveats
@@ -80,12 +80,12 @@ trusted for the normal-mode control protocol:
 - `docs/opcode-database.md` — banner added; body is superseded.
 - `docs/protocol-reference.md` — normal-mode opcode section + "Report ID 0x6A"
   are superseded.
-- `analysis/direct-hid-probing.md` — historical; authoritative sections marked.
-- `analysis/final-findings.md` — FWU-focused; the "unknown trigger" claim is
+- `docs/analysis/direct-hid-probing.md` — historical; authoritative sections marked.
+- `docs/analysis/final-findings.md` — FWU-focused; the "unknown trigger" claim is
   superseded by the cracked framing.
 - `README.md` — battery row overstated; firmware row understated.
 - `.opencode/plan/comprehensive-roadmap.md`,
   `.opencode/plan/python-cli-control-sync.md` — premise on `FeatureIndex`.
 
 **Authoritative references:** `docs/verified-secom-opcodes.md` (protocol),
-`analysis/final-findings.md` (firmware-update history), this document (status).
+`docs/analysis/final-findings.md` (firmware-update history), this document (status).
