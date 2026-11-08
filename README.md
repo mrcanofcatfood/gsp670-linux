@@ -6,6 +6,27 @@ the **GSA 70** wireless dongle.
 > The GSP 670 was made by Sennheiser and is now branded **EPOS**. It is *not* a
 > SteelSeries product, despite the similar model numbering.
 
+## Why this project exists
+
+EPOS Gaming was **wound down by its parent company, Demant, in September 2023**.
+The entire staff was laid off and the gaming headset line was gradually
+discontinued. EPOS continues as an enterprise-audio business; the gaming
+products survive only as remaining stock and legacy support pages.
+
+That left the GSP 670 and GSA 70 with no vendor software for anything but
+Windows. The EPOS Gaming Suite has never had a Linux version, and nobody is
+going to write one now. There is also no route to a firmware update: the
+devices already run the final firmware, so the dongle's ~1.4-second audio
+latency bug will never be fixed by the vendor.
+
+So the headset does work on Linux — the kernel and PipeWire already expose
+its stereo "Game" and mono "Chat" paths — but a few things need help: the
+chat/game mix, the device controls, and the rough edges described below. This
+project is that help.
+
+See [docs/vendor-status.md](docs/vendor-status.md) for the full timeline and
+sources, including where to find the vendor's Windows software.
+
 ---
 
 ## What you get
@@ -191,6 +212,7 @@ Common issues and their fixes are in
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Symptom → cause → fix |
 | [docs/compatibility.md](docs/compatibility.md) | Kernel, distro and version matrix |
 | [docs/limitations.md](docs/limitations.md) | Everything that cannot work, and why |
+| [docs/vendor-status.md](docs/vendor-status.md) | What happened to EPOS's gaming division, and where to find its software |
 | [docs/virtual-surround.md](docs/virtual-surround.md) | Host-side 7.1 virtualisation |
 | [docs/cli-reference.md](docs/cli-reference.md) | `gsp670` command reference |
 | [docs/protocol-reference.md](docs/protocol-reference.md) | The device HID protocol |

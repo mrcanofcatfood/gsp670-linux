@@ -95,6 +95,28 @@ First public release.
 - Rewrote `rules.d/debian/copyright` to state plainly that no third-party or
   proprietary material is redistributed.
 
+### Documentation
+
+- Added `docs/vendor-status.md` — the authoritative account of EPOS Gaming's
+  wind-down (announced September 2023 by parent company Demant), what still
+  exists, what does not, and what it means for Linux users. Includes dated
+  sources and the working links to the EPOS Gaming Suite.
+- Added a "Why this project exists" section to the README, so the project's
+  motivation is stated before the feature list.
+- Corrected a claim in `docs/troubleshooting.md` that said *"EPOS sold its
+  gaming division"*. EPOS did not sell it onward — Demant wound it down and
+  laid off all staff. The statement is now accurate and points at
+  `docs/vendor-status.md`.
+- Documented the link rules for EPOS's gaming pages: page paths take a locale
+  prefix, asset paths do not, and the assets are served only from the
+  `demant-epi` host. EPOS's own support articles still link to the old,
+  now-dead paths.
+- Added durable Internet Archive links for the Gaming Suite download page and
+  the installer. The archived installer was verified byte-for-byte against
+  EPOS's live copy.
+- Noted in `docs/legal.md` that linking to the vendor's proprietary installer
+  is not redistribution of it.
+
 ### Notes
 - The "Game" (stereo) and "Chat" (mono) outputs come from the stock
   `usb-gaming-headset.conf` ALSA profile set that ships with PulseAudio/ALSA.

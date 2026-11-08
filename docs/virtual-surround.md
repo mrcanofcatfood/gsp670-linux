@@ -8,6 +8,11 @@ a PipeWire `filter-chain` sink that accepts 8-channel input, convolves every
 channel with a head-related transfer function (HRTF), and outputs stereo to
 the headset.
 
+> The EPOS Gaming Suite itself is Windows-only, is not redistributable, and
+> its vendor has wound down the gaming division — see
+> [vendor-status.md](vendor-status.md). The host-side approach below is what
+> replaces it on Linux.
+
 This is now **implemented and objectively verified** on this project's test
 system: `scripts/surround_verify.py --test` reports 8/8 channels reaching the
 headset with correct interaural level and time differences.

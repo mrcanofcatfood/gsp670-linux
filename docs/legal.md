@@ -57,6 +57,14 @@ This repository contains **none** of the following:
 | Windows virtual-machine images | research artefacts only; not needed |
 | The HeSuVi head-related impulse response | third-party; fetched from its own upstream project on demand, with a SHA-256 pin, under its own licence |
 
+The documentation *links* to the EPOS Gaming Suite's official download and to
+archived copies of it, so that readers can obtain the vendor's own software.
+Linking to it is not redistribution: no part of it is included in this
+repository, in any release artefact, or in any package built from it.
+
+For context on the vendor's current position, see
+[vendor-status.md](vendor-status.md).
+
 The impulse response used by the optional virtual-surround feature is
 **downloaded** by `scripts/setup-virtual-surround.sh` from the
 [HeSuVi project](https://sourceforge.net/projects/hesuvi/) at the user's

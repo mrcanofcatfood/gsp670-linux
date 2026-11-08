@@ -11,6 +11,7 @@ Reference documentation for `gsp670-linux`.
 | [audio-setup.md](audio-setup.md) | Routing, the Game/Chat split, Discord |
 | [troubleshooting.md](troubleshooting.md) | Symptom → cause → fix |
 | [limitations.md](limitations.md) | Everything that cannot work, and why |
+| [vendor-status.md](vendor-status.md) | What happened to EPOS's gaming division, and where to find its software |
 | [compatibility.md](compatibility.md) | Kernel, distribution and version matrix |
 | [virtual-surround.md](virtual-surround.md) | Host-side 7.1 virtualisation |
 

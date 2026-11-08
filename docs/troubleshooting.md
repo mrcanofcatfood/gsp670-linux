@@ -347,7 +347,8 @@ logging.basicConfig(level=logging.DEBUG)
 ```
 
 ### Capture USB Traffic
-For detailed protocol analysis (requires Windows VM with EPOS Gaming Suite):
+For detailed protocol analysis (requires a Windows VM with the EPOS Gaming
+Suite — see [vendor-status.md](vendor-status.md#getting-the-epos-gaming-suite)):
 ```bash
 # On Linux, you can only capture hidraw traffic
 sudo cat /dev/hidrawX | xxd > capture.bin
@@ -357,10 +358,10 @@ sudo cat /dev/hidrawX | xxd > capture.bin
 
 ## Known Limitations
 
-1. **Wireless Latency**: The GSA 70 dongle has a firmware bug causing ~1.4s latency in wireless mode. This cannot be fixed in software.
+1. **Wireless Latency**: The GSA 70 dongle has a firmware bug causing ~1.4s latency in wireless mode. This cannot be fixed in software, and there is no firmware update that would fix it — see [vendor-status.md](vendor-status.md).
 
-2. **EPOS Suite Required for Updates**: Firmware updates require the Windows EPOS Gaming Suite application.
+2. **EPOS Suite Required for Updates**: Firmware updates require the Windows EPOS Gaming Suite application. It is still downloadable — see [Getting the EPOS Gaming Suite](vendor-status.md#getting-the-epos-gaming-suite) for the current and archived links.
 
-3. **Product Discontinued**: EPOS sold its gaming division; no further firmware updates are expected.
+3. **Gaming Division Wound Down**: EPOS Gaming was wound down by its parent company in September 2023, so there is no vendor Linux support and no further development for these devices. See [vendor-status.md](vendor-status.md).
 
 4. **Bluetooth Mode**: Not officially supported by this library, though the headset may work natively with Linux BlueZ.

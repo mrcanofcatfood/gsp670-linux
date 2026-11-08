@@ -15,7 +15,9 @@ accumulates.
 
 **Is it fixable?** No. Every publicly released dongle firmware (3.3.43) has
 the same behaviour. The buffer size is baked into the firmware, and the
-firmware cannot be updated — see limitation 3.
+firmware cannot be updated — see limitation 3. There is also no vendor left to
+write a corrected firmware: EPOS's gaming division has been wound down — see
+[vendor-status.md](vendor-status.md).
 
 **What to do.** Use the wired Micro-USB connection for anything latency-sensitive.
 It delivers about **44 ms** latency, which is fine for gaming. The dongle is
@@ -62,6 +64,12 @@ The headset does report *charging* state and *link* state — those work.
 **What to do.** Nothing. Do not downgrade the headset's firmware either: some
 vendor firmware versions change the USB descriptor in a way that breaks Linux
 compatibility.
+
+The vendor's Windows Gaming Suite can still update the headset when connected
+to a Windows machine, but it cannot fix anything that matters here — the
+final firmware is already installed, and the vendor has wound down the gaming
+division, so no corrected firmware will ever be published. See
+[vendor-status.md](vendor-status.md).
 
 ## 4. 7.1 surround is host-side only
 
