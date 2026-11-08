@@ -36,7 +36,7 @@ OFFSET_CRC = 11
 
 
 def load_fixtures():
-    with open(FIXTURES, "r", encoding="utf-8") as fh:
+    with open(FIXTURES, encoding="utf-8") as fh:
         return json.load(fh)
 
 

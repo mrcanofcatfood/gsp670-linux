@@ -14,33 +14,18 @@ import unittest
 sys.path.insert(0, 'src')
 
 from gsp670.events import (
-    parse_event_payload,
+    ANCHearThroughEvent,
+    ANCLevelEvent,
     BatteryEvent,
     ChargingEvent,
     SidetoneEvent,
-    ANCHearThroughEvent,
-    ANCLevelEvent,
-    ANCStateEvent,
-    LinkEvent,
     SubDevicesEvent,
-    VolumeLimiterEvent,
-    PcSoundPriorityEvent,
-    TalkWhileMuteEvent,
     VirtualButtonEvent,
-    MMIConfigEvent,
-    AutoPowerOffTimerEvent,
-    AutoPowerOffStatusEvent,
-    ComponentStatusEvent,
-    TonePromptEvent,
-    PairingStatusEvent,
-    ConnectionChangeEvent,
-    MultipointScoEvent,
-    SpeakerMicSettingEvent,
-    PdlModeEvent,
+    VolumeLimiterEvent,
     _key_length,
-    _parse_value,
+    parse_event_payload,
 )
-from gsp670.protocol import decode_event_key, EVENT_KEYS, EVENT_PAYLOAD
+from gsp670.protocol import EVENT_KEYS, EVENT_PAYLOAD, decode_event_key
 
 
 class TestEventKeyDecoding(unittest.TestCase):

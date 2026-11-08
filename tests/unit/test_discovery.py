@@ -6,21 +6,18 @@ Tests HID device discovery and audio device enumeration.
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from gsp670.discovery import (
-    find_devices,
-    enumerate_hid,
-    find_hid_device,
-    find_dongle,
-    find_headset,
-    find_audio_card,
-    _parse_alsa_output,
-    _parse_device_info,
-    VID,
     PID_GSA70,
     PID_GSP670,
+    _parse_alsa_output,
+    _parse_device_info,
+    find_audio_card,
+    find_devices,
+    find_dongle,
+    find_headset,
 )
-from gsp670.device import DeviceInfo
 
 
 class TestDeviceInfoParsing(unittest.TestCase):
@@ -39,9 +36,9 @@ class TestDeviceInfoParsing(unittest.TestCase):
             'usage': 0x01,
             'interface_number': 5,
         }
-        
+
         info = _parse_device_info(d)
-        
+
         self.assertEqual(info.vid, 0x1395)
         self.assertEqual(info.pid, 0x0300)
         self.assertEqual(info.path, b'/dev/hidraw3')
@@ -58,9 +55,9 @@ class TestDeviceInfoParsing(unittest.TestCase):
             'vendor_id': 0x1395,
             'product_id': 0x008A,
         }
-        
+
         info = _parse_device_info(d)
-        
+
         self.assertEqual(info.vid, 0x1395)
         self.assertEqual(info.pid, 0x008A)
         self.assertIsNone(info.path)
@@ -86,9 +83,9 @@ class TestFindHIDDevice(unittest.TestCase):
                 },
             ])
         )
-        
+
         result = find_dongle()
-        
+
         self.assertIsNotNone(result)
         self.assertEqual(result.pid, PID_GSA70)
         # Note: find_dongle/find_headset return DeviceInfo but don't set is_dongle/is_headset
@@ -109,9 +106,9 @@ class TestFindHIDDevice(unittest.TestCase):
                 },
             ])
         )
-        
+
         result = find_headset()
-        
+
         self.assertIsNotNone(result)
         self.assertEqual(result.pid, PID_GSP670)
 
@@ -121,7 +118,7 @@ class TestFindHIDDevice(unittest.TestCase):
         mock_require_hid.return_value = MagicMock(
             enumerate=MagicMock(return_value=[])
         )
-        
+
         result = find_dongle()
         self.assertIsNone(result)
 
@@ -153,9 +150,9 @@ class TestFindDevices(unittest.TestCase):
                 },
             ])
         )
-        
+
         result = find_devices()
-        
+
         # Should only have one device
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].path, b'/dev/hidraw3')
@@ -181,12 +178,12 @@ class TestFindDevices(unittest.TestCase):
                 },
             ])
         )
-        
+
         result = find_devices()
-        
+
         dongles = [d for d in result if d.is_dongle]
         headsets = [d for d in result if d.is_headset]
-        
+
         self.assertEqual(len(dongles), 1)
         self.assertEqual(len(headsets), 1)
 
@@ -201,7 +198,7 @@ class TestALSAParsing(unittest.TestCase):
   Subdevice #1: subdevice #1
 """
         devices = _parse_alsa_output(output, 'playback')
-        
+
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0]['card'], 4)
         self.assertEqual(devices[0]['name'], 'G670')
@@ -216,7 +213,7 @@ class TestALSAParsing(unittest.TestCase):
   Subdevice #1: subdevice #1
 """
         devices = _parse_alsa_output(output, 'capture')
-        
+
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0]['card'], 3)
         self.assertEqual(devices[0]['type'], 'capture')
@@ -237,7 +234,7 @@ class TestFindAudioCard(unittest.TestCase):
             {'card': 0, 'name': 'Generic', 'type': 'playback'},
             {'card': 4, 'name': 'G670', 'type': 'playback'},
         ]
-        
+
         result = find_audio_card('G670')
         self.assertEqual(result, 4)
 
@@ -247,7 +244,7 @@ class TestFindAudioCard(unittest.TestCase):
         mock_enum_audio.return_value = [
             {'card': 0, 'name': 'Generic', 'type': 'playback'},
         ]
-        
+
         result = find_audio_card('G670')
         self.assertIsNone(result)
 
@@ -257,7 +254,7 @@ class TestFindAudioCard(unittest.TestCase):
         mock_enum_audio.return_value = [
             {'card': 4, 'name': 'G670', 'type': 'playback'},
         ]
-        
+
         result = find_audio_card('g670')
         self.assertEqual(result, 4)
 

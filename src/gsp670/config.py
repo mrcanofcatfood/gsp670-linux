@@ -5,11 +5,12 @@ Device configuration persistence for GSP 670.
 Stores and retrieves device settings using XDG Base Directory specification.
 """
 
+from __future__ import annotations
+
 import json
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional, List
 
 # XDG Base Directory paths — expanduser() so ~ resolves correctly
 XDG_CONFIG_HOME = Path(os.environ.get('XDG_CONFIG_HOME', '~/.config')).expanduser()
@@ -49,85 +50,85 @@ class EQPreset:
     name: str = "Default"
     enabled: bool = False
     # 10-band EQ gains (dB), -12 to +12
-    bands: List[int] = field(default_factory=lambda: [0] * 10)
-    
+    bands: list[int] = field(default_factory=lambda: [0] * 10)
+
     def to_dict(self) -> dict:
         return asdict(self)
-    
+
     @classmethod
-    def from_dict(cls, data: dict) -> 'EQPreset':
+    def from_dict(cls, data: dict) -> EQPreset:
         return cls(**data)
 
 
-@dataclass 
+@dataclass
 class DeviceConfig:
     """Device configuration persisted across sessions."""
     # Device identity (from device)
-    serial: Optional[str] = None
-    firmware_version: Optional[str] = None
-    
+    serial: str | None = None
+    firmware_version: str | None = None
+
     # Audio settings
     sidetone_level: int = 50  # 0-100
     noise_reduction_level: int = 0  # 0-3 (off, low, medium, high)
     auto_power_off_minutes: int = 30  # 0 = disabled
-    
+
     # Volume limiter
     volume_limiter_enabled: bool = False
     volume_limiter_max: int = 100  # 1-100
-    
+
     # EQ presets
-    eq_presets: List[EQPreset] = field(default_factory=list)
-    active_eq_preset: Optional[str] = None
-    
+    eq_presets: list[EQPreset] = field(default_factory=list)
+    active_eq_preset: str | None = None
+
     # Last known device path (for auto-reconnect)
-    last_device_path: Optional[str] = None
-    
+    last_device_path: str | None = None
+
     # Metadata
     config_version: int = 1
-    
+
     def to_dict(self) -> dict:
         result = asdict(self)
         return result
-    
+
     @classmethod
-    def from_dict(cls, data: dict) -> 'DeviceConfig':
+    def from_dict(cls, data: dict) -> DeviceConfig:
         # Handle EQ presets
-        if 'eq_presets' in data and data['eq_presets']:
+        if data.get('eq_presets'):
             data['eq_presets'] = [EQPreset.from_dict(p) for p in data['eq_presets']]
         return cls(**data)
-    
-    def save(self, path: Optional[Path] = None) -> None:
+
+    def save(self, path: Path | None = None) -> None:
         """Save configuration to JSON file."""
         if path is None:
             path = get_config_dir() / 'config.json'
-        
+
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(path, 'w') as f:
             json.dump(self.to_dict(), f, indent=2)
-    
+
     @classmethod
-    def load(cls, path: Optional[Path] = None) -> 'DeviceConfig':
+    def load(cls, path: Path | None = None) -> DeviceConfig:
         """Load configuration from JSON file."""
         if path is None:
             path = get_config_dir() / 'config.json'
-        
+
         path = Path(path)
-        
+
         if not path.exists():
             return cls()
-        
+
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 data = json.load(f)
             return cls.from_dict(data)
         except (json.JSONDecodeError, TypeError, KeyError):
             # Corrupted config - start fresh
             return cls()
-    
+
     @classmethod
-    def for_device(cls, serial: str) -> 'DeviceConfig':
+    def for_device(cls, serial: str) -> DeviceConfig:
         """Load configuration for a specific device, or return default."""
         config = cls.load()
         if config.serial != serial:
@@ -141,10 +142,10 @@ def get_default_config() -> DeviceConfig:
     return DeviceConfig()
 
 
-def save_device_config(config: DeviceConfig, serial: Optional[str] = None) -> None:
+def save_device_config(config: DeviceConfig, serial: str | None = None) -> None:
     """
     Save device configuration.
-    
+
     If serial is provided, saves to a device-specific file.
     Otherwise saves to the default config file.
     """
@@ -155,10 +156,10 @@ def save_device_config(config: DeviceConfig, serial: Optional[str] = None) -> No
     config.save(path)
 
 
-def load_device_config(serial: Optional[str] = None) -> DeviceConfig:
+def load_device_config(serial: str | None = None) -> DeviceConfig:
     """
     Load device configuration.
-    
+
     If serial is provided, loads from device-specific file.
     Otherwise loads from default config file.
     """

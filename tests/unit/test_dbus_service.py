@@ -16,8 +16,8 @@ import dbus.mainloop.glib
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-from gsp670.dbus_service import Gsp670DBusService
 from gsp670.config import DeviceConfig
+from gsp670.dbus_service import Gsp670DBusService
 
 
 class _FakeDevice:

@@ -24,10 +24,9 @@ Opcode transform (request → reply):
 Reference: docs/verified-secom-opcodes.md
 """
 
-import struct
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Optional, Tuple
+from typing import Optional
 
 # Vendor ID for EPOS|Sennheiser devices
 VID = 0x1395
@@ -373,11 +372,11 @@ class Frame:
 def crc8(data: bytes, init: int = 0xFF) -> int:
     """
     Compute CRC-8 of data using polynomial 0x07, initial value 0xFF.
-    
+
     Args:
         data: Bytes to compute CRC over
         init: Initial CRC value (default 0xFF)
-    
+
     Returns:
         CRC-8 value (0-255)
     """
@@ -392,12 +391,12 @@ def crc8(data: bytes, init: int = 0xFF) -> int:
 def expected_reply_opcode(request_opcode: int) -> int:
     """
     Compute the expected reply opcode for a given request opcode.
-    
+
     Transform: reply_opcode = (req & 0xFF00) | ((req & 0xFF) >> 2)
-    
+
     Args:
         request_opcode: The request opcode
-    
+
     Returns:
         Expected reply opcode
     """
@@ -407,7 +406,7 @@ def expected_reply_opcode(request_opcode: int) -> int:
 def frame(opcode: int, payload: bytes = b'', marker: bytes = MARKER_HOST) -> bytes:
     """
     Build a 107-byte HID report (report id + 106 data bytes).
-    
+
     Wire format:
         [0]     = 0x01 report id
         [1..4]  = EB FE 01 00 sync
@@ -417,21 +416,21 @@ def frame(opcode: int, payload: bytes = b'', marker: bytes = MARKER_HOST) -> byt
         [11]    = CRC-8(payload) with poly 0x07, init 0xFF
         [12]    = 0x00 filler
         [13..]  = payload
-    
+
     Args:
         opcode: Capricorn opcode
         payload: Payload bytes (max 93 bytes to fit in 106-byte frame)
         marker: Host marker (default: 04 00)
-    
+
     Returns:
         107-byte HID report
-    
+
     Raises:
         AssertionError: If payload is too long
     """
     max_payload = RPT - 12  # 94 bytes max
     assert len(payload) <= max_payload, f'payload too long (max {max_payload})'
-    
+
     data = bytearray(RPT)
     data[0:4] = SYNC
     data[4:6] = marker
@@ -442,18 +441,18 @@ def frame(opcode: int, payload: bytes = b'', marker: bytes = MARKER_HOST) -> byt
     data[10] = crc8(payload)
     data[11] = FILLER
     data[12:12 + len(payload)] = payload
-    
+
     return bytes([0x01]) + bytes(data)
 
 
 def classify(raw: bytes, request_opcode: Optional[int] = None) -> Frame:
     """
     Classify and parse a received Capricorn frame.
-    
+
     Args:
         raw: Raw bytes from HID read
         request_opcode: Original request opcode (for computing expected reply)
-    
+
     Returns:
         Frame dataclass with parsed fields
     """
@@ -469,23 +468,23 @@ def classify(raw: bytes, request_opcode: Optional[int] = None) -> Frame:
         tail=b'',
         kind='unknown'
     )
-    
+
     d = bytes(raw)
     out.report_id = d[0] if len(d) > 0 else 0
     out.sync = d[1:5] if len(d) > 4 else b''
     out.marker = d[5:7] if len(d) > 6 else b''
-    
+
     if len(d) < 13:
         out.kind = 'short'
         return out
-    
+
     out.opcode = int.from_bytes(d[7:9], 'little')
     out.size = int.from_bytes(d[9:11], 'little')
     out.crc = d[11]
     out.filler = d[12]
     out.payload = d[13:13 + out.size] if len(d) > 13 else b''
     out.tail = d[13 + out.size:] if len(d) > 13 else b''
-    
+
     # Classify based on marker
     marker_hex = out.marker.hex()
     if marker_hex == MARKER_NAK.hex():
@@ -500,11 +499,11 @@ def classify(raw: bytes, request_opcode: Optional[int] = None) -> Frame:
         out.kind = 'subreply'
     else:
         out.kind = 'other'
-    
+
     # Compute expected reply opcode if request was provided
     if request_opcode is not None:
         out.expected_opcode = expected_reply_opcode(request_opcode)
-    
+
     return out
 
 
@@ -599,46 +598,46 @@ def rtx_fwu_enable(a: int = 0, b: int = 0) -> bytes:
     return rtx_fwu_packet(bytes([0x00, 0x4F, a & 0xFF, b & 0xFF]))
 
 
-def validate_frame(f: Frame) -> Tuple[bool, str]:
+def validate_frame(f: Frame) -> tuple[bool, str]:
     """
     Validate a received frame.
-    
+
     Args:
         f: Parsed Frame
-    
+
     Returns:
         (is_valid, error_message)
     """
     if f.kind == 'short':
         return False, f"Frame too short ({len(f.payload) + 13} bytes)"
-    
+
     if f.report_id != 0x01:
         return False, f"Invalid report ID: 0x{f.report_id:02x}"
-    
+
     if f.sync != SYNC:
         return False, f"Invalid sync: {f.sync.hex()}"
-    
+
     if f.filler != FILLER:
         return False, f"Invalid filler: 0x{f.filler:02x}"
-    
+
     if f.kind in ('ack', 'event', 'subreply'):
         expected_crc = crc8(f.payload)
         if f.crc != expected_crc:
             return False, f"CRC mismatch: got 0x{f.crc:02x}, expected 0x{expected_crc:02x}"
-    
+
     return True, ""
 
 
 def marker_transform(marker: bytes) -> bytes:
     """
     Transform a host marker to expected device marker.
-    
+
     Transform: byte0 + 1, byte1 + 0x30
     04 00 → 05 30, 03 04 → 04 34, 10 01 → 11 31
-    
+
     Args:
         marker: Host marker (2 bytes)
-    
+
     Returns:
         Expected device marker
     """

@@ -11,14 +11,13 @@ import asyncio
 import time
 import unittest
 
-from gsp670.device import GSA70Device, DeviceDisconnectedError
-from gsp670.protocol import crc8, SYNC, MARKER_EVENT_BURST
+from gsp670.device import DeviceDisconnectedError, GSA70Device
 from gsp670.events import (
     BatteryEvent,
-    ChargingEvent,
     LinkEvent,
     SubDevicesEvent,
 )
+from gsp670.protocol import MARKER_EVENT_BURST, SYNC, crc8
 
 # Event payload keys (key = <word0 u16 LE> <word1 u16 LE> <variant u16 LE>):
 BATTERY_PERCENTAGE = bytes.fromhex('12000f000400')   # Battery_Events_Percentage

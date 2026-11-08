@@ -14,50 +14,42 @@ Usage:
 
 import argparse
 import asyncio
+import logging
+import signal
 import sys
 import time
-import signal
-import logging
 
 from . import (
-    GSA70Device,
-    GSP670Device,
-    find_devices,
-    enumerate_audio,
+    BatteryEvent,
+    ChargingEvent,
+    CommunicationError,
     DeviceError,
     DeviceNotFoundError,
-    DeviceDisconnectedError,
-    CommunicationError,
-    format_headset_status,
-    format_battery_status,
-    format_link_status,
-    ControlsState,
-    VolumeControl,
-    MuteControl,
-    SidetoneControl,
-    print_devices,
-    print_audio_devices,
-    format_event_key,
-    parse_frame_event,
-    BatteryEvent,
+    GSA70Device,
+    GSP670Device,
     LinkEvent,
-    ChargingEvent,
     SubDevicesEvent,
-    save_device_config,
+    enumerate_audio,
+    find_devices,
+    format_event_key,
     load_device_config,
+    parse_frame_event,
+    print_audio_devices,
+    print_devices,
+    save_device_config,
 )
 
 
 def get_device(args):
     """
     Get and open the appropriate device.
-    
+
     Args:
         args: Parsed command-line arguments
-    
+
     Returns:
         Open device instance
-    
+
     Raises:
         DeviceNotFoundError: If device not found
         DeviceError: If device cannot be opened
@@ -71,7 +63,7 @@ def get_device(args):
         except DeviceNotFoundError:
             if args.device == 'dongle':
                 raise
-    
+
     # Try headset
     if args.device == 'auto' or args.device == 'headset':
         try:
@@ -81,7 +73,7 @@ def get_device(args):
         except DeviceNotFoundError:
             if args.device == 'headset':
                 raise
-    
+
     raise DeviceNotFoundError(
         "No GSP 670 device found. Is the headset/dongle connected?"
     )
@@ -90,19 +82,19 @@ def get_device(args):
 def cmd_info(args):
     """Show device information."""
     import json
-    
+
     def bytes_to_str(val):
         """Convert bytes to string for JSON serialization."""
         if isinstance(val, bytes):
             return val.decode('utf-8', errors='replace')
         return val
-    
+
     info = {
         'device': 'EPOS|Sennheiser GSP 670',
         'hid': {'devices': [], 'audio': []},
         'dongle': None,
     }
-    
+
     # HID devices
     try:
         devices = find_devices()
@@ -115,13 +107,13 @@ def cmd_info(args):
             })
     except Exception as e:
         info['hid']['error'] = str(e)
-    
+
     # Audio devices
     try:
         info['hid']['audio'] = enumerate_audio()
     except Exception as e:
         info['hid']['audio_error'] = str(e)
-    
+
     # Dongle info
     try:
         with GSA70Device() as dev:
@@ -146,15 +138,15 @@ def cmd_info(args):
         info['dongle'] = {'error': 'not found'}
     except DeviceError as e:
         info['dongle'] = {'error': str(e)}
-    
+
     if args.json:
         print(json.dumps(info, indent=2))
         return 0
-    
+
     # Human-readable output
     print("EPOS|Sennheiser GSP 670 Device Information")
     print("=" * 50)
-    
+
     # HID devices
     print("\nHID Devices:")
     print("-" * 30)
@@ -166,7 +158,7 @@ def cmd_info(args):
             print("No HID devices found.")
     except Exception as e:
         print(f"Error enumerating HID: {e}")
-    
+
     # Audio devices
     print("\nAudio Devices:")
     print("-" * 30)
@@ -174,7 +166,7 @@ def cmd_info(args):
         print_audio_devices()
     except Exception as e:
         print(f"Error enumerating audio: {e}")
-    
+
     # Try to communicate with dongle
     print("\nDongle Communication Test:")
     print("-" * 30)
@@ -184,7 +176,7 @@ def cmd_info(args):
             print(f"  Product: {dev.info.product_string}")
             print(f"  Manufacturer: {dev.info.manufacturer_string}")
             print(f"  Serial: {dev.info.serial}")
-            
+
             # Try to get firmware version (valid SECOM opcode)
             print("\n  Testing communication...")
             try:
@@ -202,30 +194,30 @@ def cmd_info(args):
 def cmd_status(args):
     """Show current headset status."""
     import json
-    
+
     def bytes_to_str(val):
         """Convert bytes to string for JSON serialization."""
         if isinstance(val, bytes):
             return val.decode('utf-8', errors='replace')
         return val
-    
+
     status = {
         'device': None,
         'notifications': [],
         'status_response': None,
         'error': None,
     }
-    
+
     try:
         with GSA70Device() as dev:
             status['device'] = {
                 'product': dev.info.product_string,
                 'path': bytes_to_str(dev.info.path),
             }
-            
+
             # Drain notifications
             notifications = dev.drain(0.5)
-            
+
             for frame in notifications:
                 status['notifications'].append({
                     'opcode': f'0x{frame.opcode:04X}',
@@ -247,21 +239,21 @@ def cmd_status(args):
         if not args.json:
             print(f"Error: {e}")
             return 1
-    
+
     if args.json:
         print(json.dumps(status, indent=2))
         return 0
-    
+
     # Human-readable output
     print("GSP 670 Status")
     print("=" * 50)
-    
+
     if status['error']:
         return 1
-    
+
     print(f"\nDevice: {status['device']['product'] or 'GSA 70 Dongle'}")
     print(f"Path: {status['device']['path']}")
-    
+
     if status['notifications']:
         print(f"\nReceived {len(status['notifications'])} notification(s)")
         for i, notif in enumerate(status['notifications']):
@@ -271,13 +263,13 @@ def cmd_status(args):
     else:
         print("\nNo notifications received.")
         print("Try adjusting volume or pressing a button on the headset.")
-    
+
     if status['status_response']:
-        print(f"\nRequesting status...")
+        print("\nRequesting status...")
         print(f"  Status response: kind={status['status_response']['kind']}, opcode={status['status_response']['opcode']}")
     elif status.get('status_response_error'):
         print(f"\n  Status request: {status['status_response_error']}")
-    
+
     return 0
 
 
@@ -285,7 +277,7 @@ def cmd_controls_list(args):
     """List available controls."""
     print("GSP 670 Controls")
     print("=" * 50)
-    
+
     controls = [
         ("device_name",   "Device name (SECOM 0x02)",              "string"),
         ("firmware",      "Firmware version (SECOM 0x00)",         "x.y.z"),
@@ -301,12 +293,12 @@ def cmd_controls_list(args):
         ("mic_gain",      "Microphone gain (OS/APO, not a device command)", "0-100"),
         ("reverb",        "Reverb (APO only, not a device command)", "0-100"),
     ]
-    
+
     print(f"\n{'Control':<16} {'Description':<42} {'Range'}")
     print("-" * 74)
     for name, desc, range_str in controls:
         print(f"{name:<16} {desc:<42} {range_str}")
-    
+
     print("\nUse 'gsp670 controls get <control>' to read a value")
     print("Use 'gsp670 controls set <control> <value>' to set a value")
     print("\nSee docs/verified-secom-opcodes.md for the wire protocol.")
@@ -315,7 +307,7 @@ def cmd_controls_list(args):
 def cmd_controls_get(args):
     """Get a control value from the device."""
     control = args.control.lower()
-    
+
     # Map CLI control names to device methods. Only the SECOM-backed controls
     # are real device commands; volume/mic-gain/reverb are OS/APO controls.
     GETTERS = {
@@ -333,35 +325,35 @@ def cmd_controls_get(args):
         'device_address': ('get_device_address', "Device address (opcode 0x03)"),
         'reverb': ('get_reverb', "Reverb level (APO only, not a device command)"),
     }
-    
+
     if control not in GETTERS:
         print(f"Unknown control: {control}")
         print("Available controls: " + ", ".join(GETTERS.keys()))
         return 1
-    
-    method_name, desc = GETTERS[control]
-    
+
+    method_name, _desc = GETTERS[control]
+
     try:
         with GSA70Device() as dev:
             getter = getattr(dev, method_name)
             value = getter()
-            
+
             if isinstance(value, (bytes, bytearray)):
                 print(f"{control}: {bytes(value).hex()}")
                 return 0
-            
+
             if value is None:
                 print(f"{control}: unavailable (needs the headset linked and powered on)")
                 return 1
-            
+
             if value == -1:
                 print(f"{control}: not a device control (use the OS mixer / APO)")
                 return 1
-            
+
             print(f"{control}: {value}")
-            
+
     except DeviceNotFoundError:
-        print(f"Error: GSA 70 dongle not found. Is it connected?")
+        print("Error: GSA 70 dongle not found. Is it connected?")
         return 1
     except CommunicationError as e:
         print(f"Communication error: {e}")
@@ -369,7 +361,7 @@ def cmd_controls_get(args):
     except DeviceError as e:
         print(f"Error: {e}")
         return 1
-    
+
     return 0
 
 
@@ -377,7 +369,7 @@ def cmd_controls_set(args):
     """Set a control value on the device."""
     control = args.control.lower()
     value_str = args.value
-    
+
     # Map CLI control names to device methods. Only SECOM setters are real
     # device commands; volume/mic-gain/reverb are OS/APO controls.
     SETTERS = {
@@ -388,24 +380,24 @@ def cmd_controls_set(args):
         'auto_power_off': ('set_auto_power_off', int, 0, 255),
         'reverb': ('set_reverb', int, 0, 100),
     }
-    
+
     # Config field mapping for persistence
     CONFIG_FIELDS = {
         'sidetone': 'sidetone_level',
         'noise_reduction': 'noise_reduction_level',
         'auto_power_off': 'auto_power_off_minutes',
     }
-    
+
     if control not in SETTERS:
         print(f"Unknown control: {control}")
         print("Available controls: " + ", ".join(SETTERS.keys()))
         return 1
-    
+
     method_name, parser, min_val, max_val = SETTERS[control]
-    
+
     # Parse value
     try:
-        if parser == int:
+        if parser is int:
             value = int(value_str)
             if not min_val <= value <= max_val:
                 print(f"Value must be between {min_val} and {max_val}")
@@ -413,28 +405,28 @@ def cmd_controls_set(args):
     except ValueError:
         print(f"Invalid value: {value_str}")
         return 1
-    
+
     try:
         with GSA70Device() as dev:
             setter = getattr(dev, method_name)
             success = setter(value)
-            
+
             if success:
                 print(f"Set {control} to {value}")
-                
+
                 # Persist to config if it's a device setting
                 if control in CONFIG_FIELDS:
                     config = load_device_config()
                     config.serial = dev.get_serial_number()
                     setattr(config, CONFIG_FIELDS[control], value)
                     save_device_config(config, serial=config.serial)
-                    print(f"  (saved to config)")
+                    print("  (saved to config)")
             else:
                 print(f"Device rejected the request for {control}")
                 return 1
-                
+
     except DeviceNotFoundError:
-        print(f"Error: GSA 70 dongle not found. Is it connected?")
+        print("Error: GSA 70 dongle not found. Is it connected?")
         return 1
     except CommunicationError as e:
         print(f"Communication error: {e}")
@@ -442,7 +434,7 @@ def cmd_controls_set(args):
     except DeviceError as e:
         print(f"Error: {e}")
         return 1
-    
+
     return 0
 
 
@@ -450,13 +442,13 @@ def cmd_controls_restore(args):
     """Restore settings from config file to device."""
     # Load saved config
     config = load_device_config()
-    
+
     if config.serial is None:
         print("No saved configuration found. Set some controls first.")
         return 1
-    
+
     print(f"Restoring settings for device {config.serial}")
-    
+
     # Settings that can be restored
     setters = []
     if config.sidetone_level > 0:
@@ -465,25 +457,25 @@ def cmd_controls_restore(args):
         setters.append(('noise_reduction', config.noise_reduction_level, 'set_noise_reduction'))
     if config.auto_power_off_minutes >= 0:
         setters.append(('auto_power_off', config.auto_power_off_minutes, 'set_auto_power_off'))
-    
+
     if not setters:
         print("No device settings to restore.")
         return 0
-    
+
     try:
         with GSA70Device() as dev:
             actual_serial = dev.get_serial_number()
             if actual_serial != config.serial:
                 print(f"Warning: connected device serial {actual_serial} != saved {config.serial}")
-            
+
             for name, value, method in setters:
                 setter = getattr(dev, method)
                 success = setter(value)
                 status = "OK" if success else "FAILED"
                 print(f"  {name}: {value} [{status}]")
-                
+
     except DeviceNotFoundError:
-        print(f"Error: GSA 70 dongle not found. Is it connected?")
+        print("Error: GSA 70 dongle not found. Is it connected?")
         return 1
     except CommunicationError as e:
         print(f"Communication error: {e}")
@@ -491,14 +483,14 @@ def cmd_controls_restore(args):
     except DeviceError as e:
         print(f"Error: {e}")
         return 1
-    
+
     return 0
 
 
 def cmd_battery(args):
     """Show battery status."""
     import json
-    
+
     battery = {
         'device': None,
         'notifications': [],
@@ -511,23 +503,23 @@ def cmd_battery(args):
         },
         'error': None,
     }
-    
+
     # Try to get status via dongle
     try:
         with GSA70Device() as dev:
             battery['device'] = {
                 'product': dev.info.product_string,
             }
-            
+
             # Drain to see if any battery notifications come in
             dev.drain(0.2)  # Clear buffer
-            
+
             # Request status and listen
             try:
                 dev.write(0x4F0C)  # STATUS_IND request
                 time.sleep(0.5)
                 notifications = dev.drain(1.0)
-                
+
                 for frame in notifications:
                     battery['notifications'].append({
                         'opcode': f'0x{frame.opcode:04X}',
@@ -535,7 +527,7 @@ def cmd_battery(args):
                     })
             except Exception as e:
                 battery['status_request_error'] = str(e)
-                
+
     except DeviceNotFoundError:
         battery['error'] = 'Dongle not found'
         if not args.json:
@@ -546,20 +538,20 @@ def cmd_battery(args):
         if not args.json:
             print(f"Error: {e}")
             return 1
-    
+
     if args.json:
         print(json.dumps(battery, indent=2))
         return 0
-    
+
     # Human-readable output
     print("Battery Status")
     print("=" * 50)
-    
+
     if battery['error']:
         return 1
-    
+
     print(f"\nDevice: {battery['device']['product'] or 'GSA 70 Dongle'}")
-    
+
     if battery['notifications']:
         print(f"\nReceived {len(battery['notifications'])} status notification(s)")
         for i, notif in enumerate(battery['notifications']):
@@ -568,7 +560,7 @@ def cmd_battery(args):
     else:
         print("\nNo status notifications received.")
         print("Battery status may only be available through audio notifications.")
-    
+
     # Note about battery LED
     print("\n" + "=" * 50)
     print("Battery LED indicator on headset:")
@@ -577,7 +569,7 @@ def cmd_battery(args):
     print("  Orange         - Medium (20-50%)")
     print("  Green solid    - Good (>50%)")
     print("  Green pulsing  - Charging")
-    
+
     return 0
 
 
@@ -751,12 +743,11 @@ def _cmd_watch(args):
 
 def cmd_protocol_inspect(args):
     """Show all known protocol opcodes and their status."""
-    from .protocol import Opcode
-    
+
     print("GSP 670 Protocol Opcode Inspector")
     print("=" * 60)
     print()
-    
+
     # FWU Opcodes (0x4F00-0x4F15)
     fwu_opcodes = [
         (0x4F00, "FWU_ENABLE_REQ", "host->device", "Enable firmware update mode"),
@@ -781,13 +772,13 @@ def cmd_protocol_inspect(args):
         (0x4F14, "FWU_CRC32_IND", "device->host", "CRC32 request"),
         (0x4F15, "FWU_CRC32_RES", "host->device", "CRC32 result"),
     ]
-    
+
     print("FWU (Firmware Update) Opcodes — Rtx channel, NOT SECOM")
     print("-" * 60)
     print(f"{'Opcode':<8} {'Name':<28} {'Direction':<16} Transport")
     print("-" * 60)
-    
-    for opcode, name, direction, description in fwu_opcodes:
+
+    for opcode, name, direction, _description in fwu_opcodes:
         # FWU never rides SECOM 04 00; it is an Rtx 64-byte 0x58 channel.
         print(f"0x{opcode:04X}   {name:<28} {direction:<16} Rtx")
 
@@ -801,14 +792,14 @@ def cmd_protocol_inspect(args):
     print("    switch PIDs on this path.")
     print("  - Build reports with gsp670.protocol.rtx_fwu_packet() /")
     print("    rtx_fwu_enable() (deprecated make_fwu_frame() is SECOM-only).")
-    
+
     # Try to query device for more info
     print()
     print("Device Communication Test (SECOM path only — demonstrates the NAK):")
     print("-" * 60)
     print("  FWU lives on the Rtx channel; these exchanges only show that the")
     print("  dongle does not serve FWU over SECOM 04 00.")
-    
+
     try:
         with GSA70Device() as dev:
             # Try GET_FEATURES
@@ -821,7 +812,7 @@ def cmd_protocol_inspect(args):
                     print(f"ACK - payload: {resp.payload.hex()}")
             except CommunicationError as e:
                 print(f"FAILED: {e}")
-            
+
             # Try STATUS_IND
             print("Testing 0x4F0C (FWU_STATUS_IND request) over SECOM...", end=" ")
             dev.drain(0.2)  # Clear buffer
@@ -834,19 +825,19 @@ def cmd_protocol_inspect(args):
                     print(f"  [{i+1}] opcode=0x{n.opcode:04X} kind={n.kind}")
             else:
                 print("No notifications")
-                
+
     except DeviceNotFoundError:
         print("  No device found")
     except DeviceError as e:
         print(f"  Error: {e}")
-    
+
     return 0
 
 
 def cmd_events(args):
     """Show raw HID events (similar to dongle-listener.py)."""
     count = args.count
-    
+
     print("GSP 670 Raw HID Event Monitor")
     print("=" * 60)
     if count:
@@ -855,26 +846,26 @@ def cmd_events(args):
         print("Press Ctrl+C to exit")
     print("Showing all raw HID data received from device")
     print()
-    
+
     running = True
-    
+
     def signal_handler(sig, frame):
         nonlocal running
         print("\n\nStopping monitor...")
         running = False
-    
+
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     try:
         with GSA70Device() as dev:
             print(f"Monitoring device: {dev.info.product_string or 'GSA 70'}")
             print(f"Path: {dev.info.path}")
             print("-" * 60)
-            
+
             event_count = 0
             last_event_time = time.time()
             seen_events = set()
-            
+
             # Send wakeup to ensure dongle is responsive
             print("Sending wakeup bursts...")
             for _ in range(3):
@@ -885,66 +876,66 @@ def cmd_events(args):
                 time.sleep(0.1)
             dev.drain(0.3)
             print()
-            
+
             while running:
                 # Read with short timeout
                 raw = dev.read(timeout_ms=100)
-                
+
                 if raw:
                     event_count += 1
                     now = time.time()
                     elapsed = now - last_event_time
                     last_event_time = now
-                    
+
                     # Show frame details
                     print(f"\n[{elapsed:.3f}s] Event #{event_count}:")
                     print(f"  opcode=0x{raw.opcode:04X} kind={raw.kind}")
                     print(f"  marker={raw.marker.hex()} size={raw.size}")
                     print(f"  payload ({len(raw.payload)} bytes): {raw.payload.hex()}")
                     print(f"  full frame: {bytes(raw).hex()}")
-                    
+
                     # Decode device -> host event keys (Phase 3)
                     decoded_event = format_event_key(raw.payload)
                     if decoded_event:
                         print(f"  -> Event: {decoded_event}")
-                    
+
                     # Track unique events
                     event_key = (raw.opcode, raw.kind, raw.payload[:4].hex())
                     if event_key not in seen_events:
                         seen_events.add(event_key)
-                        print(f"  ** NEW event type **")
-                    
+                        print("  ** NEW event type **")
+
                     # Check if we've collected enough events
                     if count and event_count >= count:
                         print(f"\n\nCollected {event_count} events as requested.")
                         running = False
                         break
-                
+
                 time.sleep(0.01)  # Small sleep to prevent CPU spinning
-            
+
             print(f"\n\nTotal events: {event_count}")
             print(f"Unique event types: {len(seen_events)}")
-            
+
     except DeviceNotFoundError:
         print("Error: Dongle not found.")
         return 1
     except DeviceError as e:
         print(f"Error: {e}")
         return 1
-    
+
     return 0
 
 
 def cmd_test_audio(args):
     """Run full-duplex audio test."""
+    import os
     import subprocess
     import sys
-    import os
-    
+
     print("GSP 670 Audio Test - Full-Duplex")
     print("=" * 60)
     print()
-    
+
     # Find GSP 670 audio card
     gsp_card = None
     try:
@@ -968,24 +959,24 @@ def cmd_test_audio(args):
                     break
     except Exception as e:
         print(f"Error detecting audio devices: {e}")
-    
+
     if gsp_card is None:
         print("GSP 670 audio device not found")
         print("Make sure the headset is connected via USB")
         return 1
-    
+
     playback_device = f'hw:{gsp_card},0'
     capture_device = f'hw:{gsp_card},0'
-    
+
     # Import and run the full-duplex test
     # __file__ is src/gsp670/cli.py, project root is 2 levels up
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     test_file = os.path.join(project_root, 'tests', 'hardware', 'test_full_duplex.py')
-    
+
     if not os.path.exists(test_file):
         print(f"Error: Full-duplex test not found at {test_file}")
         return 1
-    
+
     # Run the test as a subprocess
     result = subprocess.run(
         [sys.executable, test_file,
@@ -996,7 +987,7 @@ def cmd_test_audio(args):
          '--duration', '3.0'],
         capture_output=False  # Show output in real-time
     )
-    
+
     return result.returncode
 
 
@@ -1004,26 +995,26 @@ def cmd_log(args):
     """Set logging level and show log messages."""
     import importlib
     importlib.reload(logging)  # Ensure fresh logging configuration
-    
+
     log_level = getattr(logging, args.level.upper(), None)
     if log_level is None:
         print(f"Error: Unknown log level '{args.level}'")
         print("Valid levels: DEBUG, INFO, WARNING, ERROR, CRITICAL")
         return 1
-    
+
     # Configure root logger
     logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
     # Set gsp670 module loggers
     gsp_logger = logging.getLogger('gsp670')
     gsp_logger.setLevel(log_level)
-    
+
     print(f"Logging level set to {args.level.upper()}")
-    
+
     if args.message:
         # Just log a test message
         gsp_logger.debug("Debug message")
@@ -1036,7 +1027,7 @@ def cmd_log(args):
         print("  INFO - Info message")
         print("  WARNING - Warning message")
         print("  ERROR - Error message")
-    
+
     return 0
 
 
@@ -1055,7 +1046,7 @@ Examples:
   gsp670 monitor           Monitor control events
         """
     )
-    
+
     parser.add_argument(
         '-d', '--device',
         choices=['auto', 'dongle', 'headset'],
@@ -1067,36 +1058,36 @@ Examples:
         action='version',
         version='%(prog)s 0.1.0'
     )
-    
+
     subparsers = parser.add_subparsers(dest='command', help='Commands')
-    
+
     # info command
     info_parser = subparsers.add_parser('info', help='Show device information')
     info_parser.add_argument('--json', action='store_true', help='Output as JSON')
-    
+
     # status command
     status_parser = subparsers.add_parser('status', help='Show current headset status')
     status_parser.add_argument('--json', action='store_true', help='Output as JSON')
-    
+
     # controls subcommands
     controls_parser = subparsers.add_parser('controls', help='Control operations')
     controls_subparsers = controls_parser.add_subparsers(dest='subcommand', help='Control subcommands')
-    
+
     controls_subparsers.add_parser('list', help='List available controls')
-    
+
     get_parser = controls_subparsers.add_parser('get', help='Get control value')
     get_parser.add_argument('control', help='Control name (volume, mute, sidetone)')
-    
+
     set_parser = controls_subparsers.add_parser('set', help='Set control value')
     set_parser.add_argument('control', help='Control name')
     set_parser.add_argument('value', help='New value')
-    
+
     controls_subparsers.add_parser('restore', help='Restore settings from config')
-    
+
     # battery command
     battery_parser = subparsers.add_parser('battery', help='Show battery status')
     battery_parser.add_argument('--json', action='store_true', help='Output as JSON')
-    
+
     # monitor command
     monitor_parser = subparsers.add_parser('monitor', help='Monitor control events')
     monitor_parser.add_argument(
@@ -1110,17 +1101,17 @@ Examples:
         type=float,
         default=0,
         help='Run for N seconds then exit (0 = run forever, default: 0)')
-    
+
     # protocol inspect command
     protocol_parser = subparsers.add_parser('protocol', help='Protocol inspection commands')
     protocol_subparsers = protocol_parser.add_subparsers(dest='subcommand', help='Protocol subcommands')
     protocol_subparsers.add_parser('inspect', help='Show all known opcodes and status')
-    
+
     # events command
     events_parser = subparsers.add_parser('events', help='Show raw HID events')
     events_parser.add_argument('--count', type=int, default=None,
                                help='Number of events to capture then exit')
-    
+
     # log command
     log_parser = subparsers.add_parser('log', help='Set logging level')
     log_parser.add_argument('--level', '-l', default='INFO',
@@ -1128,18 +1119,18 @@ Examples:
                            help='Log level (default: INFO)')
     log_parser.add_argument('--message', '-m', action='store_true',
                            help='Show a test message at each level')
-    
+
     # test command
     test_parser = subparsers.add_parser('test', help='Test operations')
     test_subparsers = test_parser.add_subparsers(dest='subcommand', help='Test subcommands')
     test_subparsers.add_parser('audio', help='Run comprehensive audio tests')
-    
+
     args = parser.parse_args(argv)
-    
+
     if args.command is None:
         parser.print_help()
         return 0
-    
+
     # Dispatch to command handlers
     if args.command == 'info':
         return cmd_info(args)

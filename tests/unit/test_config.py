@@ -3,9 +3,9 @@
 Unit tests for the config module.
 """
 
+import os
 import sys
 import tempfile
-import os
 import unittest
 
 sys.path.insert(0, 'src')
@@ -14,8 +14,8 @@ from gsp670.config import (
     DeviceConfig,
     EQPreset,
     get_default_config,
-    save_device_config,
     load_device_config,
+    save_device_config,
 )
 
 
@@ -99,7 +99,7 @@ class TestDeviceConfig(unittest.TestCase):
 
     def test_device_specific_config(self):
         """Test loading device-specific config."""
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             # Create a device-specific config
             config = DeviceConfig()
             config.serial = "DEVICE789"

@@ -15,16 +15,15 @@ rather than a bare ImportError.
 Usage:
     # As a standalone service:
     python -m gsp670.dbus_service
-    
+
     # Or import and use the Gsp670DBusService class directly.
 """
 
-import os
-import sys
-import time
-import threading
 import argparse
 import logging
+import sys
+import threading
+import time
 from typing import Optional
 
 from ._compat import require_dbus
@@ -38,11 +37,11 @@ except Exception as _exc:  # pragma: no cover - depends on environment
 from gsp670 import GSA70Device, GSP670Device
 from gsp670.config import load_device_config, save_device_config
 from gsp670.events import (
-    parse_frame_event,
     BatteryEvent,
     ChargingEvent,
     SidetoneEvent,
     SubDevicesEvent,
+    parse_frame_event,
 )
 
 # dbus.service / dbus.mainloop.glib are needed as attributes of `dbus`; the
@@ -59,10 +58,10 @@ logger = logging.getLogger('gsp670.dbus')
 class Gsp670DBusService(dbus.service.Object):
     """
     D-Bus service providing GSP 670 device control.
-    
+
     Well-known name: com.epos.gsp670
     Object path: /com/epos/gsp670
-    
+
     Only the *verified* SECOM controls are exposed. Volume, speaker/mic EQ,
     reverb, surround and voice enhancement are OS/APO software DSP on Windows,
     not device commands, and are deliberately absent here.
@@ -100,7 +99,7 @@ class Gsp670DBusService(dbus.service.Object):
     def __init__(self, bus: dbus.Bus, device_mode: str = 'dongle'):
         """
         Initialize the D-Bus service.
-        
+
         Args:
             bus: D-Bus connection (session or system bus)
             device_mode: 'dongle' for GSA70Device, 'headset' for GSP670Device
@@ -111,7 +110,7 @@ class Gsp670DBusService(dbus.service.Object):
         self._device: Optional[GSA70Device | GSP670Device] = None
         self._poll_thread: Optional[threading.Thread] = None
         self._running = False
-        
+
         # Cached state for change detection
         self._last_battery: int = -1
         self._last_charging: bool = False
@@ -368,7 +367,7 @@ class Gsp670DBusService(dbus.service.Object):
     def GetBattery(self) -> dbus.Struct:
         """
         Get battery level (0-100) and charging state.
-        
+
         Returns (level, charging) or (-1, False) if unavailable.
         """
         result = self._get_battery_internal()
@@ -386,7 +385,7 @@ class Gsp670DBusService(dbus.service.Object):
     def SetSidetone(self, level: int) -> bool:
         """
         Set sidetone level (0-100).
-        
+
         Returns True on success, False on failure.
         """
         if not 0 <= level <= 100:
@@ -415,7 +414,7 @@ class Gsp670DBusService(dbus.service.Object):
     def SetNoiseReduction(self, level: int) -> bool:
         """
         Set noise reduction level (0=off, 1=low, 2=medium, 3=high).
-        
+
         Returns True on success, False on failure.
         """
         if not 0 <= level <= 3:
@@ -598,7 +597,7 @@ def _request_bus_name(bus: dbus.Bus) -> bool:
 def _run_service(bus_type: str = 'system', device_mode: str = 'dongle'):
     """Run the D-Bus service on the specified bus."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    
+
     if bus_type == 'session':
         bus = dbus.SessionBus()
     else:

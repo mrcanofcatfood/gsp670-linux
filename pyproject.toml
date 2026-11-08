@@ -42,6 +42,7 @@ dbus = [
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "ruff>=0.5.0",
 ]
 
 [project.scripts]
@@ -74,3 +75,50 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+extend-exclude = [
+    ".venv",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# The default rule set plus a few useful checks. Ruff's preview and "ALL"
+# rules are deliberately not used: this codebase intentionally uses broad
+# excepts (the HID protocol needs them).
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "SIM",  # simplify
+    "RUF",  # ruff-specific
+]
+ignore = [
+    # Line length is handled by the formatter.
+    "E501",
+    # contextlib.suppress is not clearer than try/except/pass here.
+    "SIM105",
+    # These are readability-neutral: an explicit if/else reads better than a
+    # long ternary in the bus-selection and config-path code.
+    "SIM102",
+    "SIM108",
+    # __all__ is grouped by topic, not alphabetised.
+    "RUF022",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use long strings.
+"tests/*" = ["E501"]
+# The D-Bus tests must install the GLib main loop before importing the
+# service module, so their imports are deliberately not at the top.
+"tests/unit/test_dbus_events.py" = ["E402"]
+"tests/unit/test_dbus_service.py" = ["E402"]
+# Scripts are standalone utilities with their own conventions.
+"scripts/*" = ["E501", "UP006", "UP035"]

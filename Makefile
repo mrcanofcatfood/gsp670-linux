@@ -82,7 +82,10 @@ test:
 lint:
 	@command -v ruff >/dev/null 2>&1 \
 		&& ruff check src/ tests/ scripts/ \
-		|| echo "ruff not installed; skipping (pip install ruff)"
+		|| { \
+			echo "ruff not installed; skipping (pip install ruff)"; \
+			echo "  or: .venv/bin/ruff check src/ tests/ scripts/"; \
+		}
 
 format:
 	@command -v ruff >/dev/null 2>&1 \

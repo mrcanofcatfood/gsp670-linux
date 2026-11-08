@@ -12,7 +12,7 @@ import unittest
 from contextlib import redirect_stdout
 
 from gsp670.cli import _run_watch_battery
-from gsp670.protocol import crc8, SYNC, MARKER_EVENT_BURST, classify
+from gsp670.protocol import MARKER_EVENT_BURST, SYNC, classify, crc8
 
 BATTERY_PERCENTAGE = bytes.fromhex('12000f000400')  # u8 level
 SUBDEVICES = bytes.fromhex('0100f0000100')          # u16 count

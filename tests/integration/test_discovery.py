@@ -10,24 +10,23 @@ Requires:
 - Root privileges (for HID access on hidraw devices)
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from gsp670 import (
-    find_devices,
-    enumerate_hid,
     enumerate_audio,
+    enumerate_hid,
+    find_audio_card,
+    find_devices,
     find_dongle,
     find_headset,
-    find_audio_card,
     print_devices,
-    DeviceNotFoundError,
 )
-from gsp670.protocol import VID, PID_GSA70, PID_GSP670
+from gsp670.protocol import PID_GSA70, PID_GSP670, VID
 
 
 class TestDeviceEnumeration(unittest.TestCase):
@@ -42,7 +41,7 @@ class TestDeviceEnumeration(unittest.TestCase):
     def test_find_devices_structure(self):
         """Test that returned devices have expected structure."""
         devices = find_devices()
-        
+
         for dev in devices:
             self.assertTrue(hasattr(dev, 'vid'))
             self.assertTrue(hasattr(dev, 'pid'))
@@ -52,10 +51,10 @@ class TestDeviceEnumeration(unittest.TestCase):
     def test_find_devices_contains_expected_pids(self):
         """Test that found devices have expected product IDs."""
         devices = find_devices()
-        
+
         if not devices:
             self.skipTest("No devices found - hardware not connected")
-        
+
         for dev in devices:
             # Should be GSA70, GSP670, or upgrade mode PIDs
             valid_pids = [PID_GSA70, PID_GSP670, 0x8300, 0x8303, 0x8089, 0x808A]
@@ -143,10 +142,10 @@ class TestDeviceClassification(unittest.TestCase):
         """Test that GSA 70 dongles have is_dongle=True."""
         devices = find_devices()
         dongles = [d for d in devices if d.is_dongle]
-        
+
         if not dongles:
             self.skipTest("No dongle found")
-        
+
         for d in dongles:
             self.assertTrue(d.is_dongle)
             self.assertEqual(d.pid, PID_GSA70)
@@ -155,10 +154,10 @@ class TestDeviceClassification(unittest.TestCase):
         """Test that GSP 670 headsets have is_headset=True."""
         devices = find_devices()
         headsets = [d for d in devices if d.is_headset]
-        
+
         if not headsets:
             self.skipTest("No headset found in wired mode")
-        
+
         for d in headsets:
             self.assertTrue(d.is_headset)
             self.assertEqual(d.pid, PID_GSP670)

@@ -10,127 +10,126 @@ Requires:
 - Root privileges (for HID access)
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from gsp670 import (
-    GSA70Device,
-    GSP670Device,
     ControlsState,
-    VolumeControl,
+    DeviceNotFoundError,
+    GSA70Device,
     MuteControl,
     SidetoneControl,
-    DeviceNotFoundError,
+    VolumeControl,
 )
 
 
 class TestControlsState(unittest.TestCase):
     """Test ControlsState class."""
-    
+
     def test_default_state(self):
         """Test default controls state initialization."""
         state = ControlsState()
-        
+
         self.assertIsNotNone(state.volume)
         self.assertIsNotNone(state.mute)
         self.assertIsNotNone(state.sidetone)
-        
+
         self.assertEqual(state.volume.value, 50)
         self.assertEqual(state.mute.muted, False)
         self.assertEqual(state.sidetone.value, 50)
-    
+
     def test_volume_range(self):
         """Test volume control range validation."""
         volume = VolumeControl()
-        
+
         # Valid range
         volume.set(0)
         self.assertEqual(volume.value, 0)
-        
+
         volume.set(100)
         self.assertEqual(volume.value, 100)
-        
+
         # Out of range
         with self.assertRaises(ValueError):
             volume.set(-1)
-        
+
         with self.assertRaises(ValueError):
             volume.set(101)
-    
+
     def test_volume_increment(self):
         """Test volume increment/decrement."""
         volume = VolumeControl()
         volume.value = 50
-        
+
         # Increment
         new_val = volume.increment(5)
         self.assertEqual(new_val, 55)
-        
+
         # Decrement
         new_val = volume.increment(-10)
         self.assertEqual(new_val, 45)
-        
+
         # Clamp to minimum
         volume.value = 5
         new_val = volume.increment(-10)
         self.assertEqual(new_val, 0)
-        
+
         # Clamp to maximum
         volume.value = 95
         new_val = volume.increment(10)
         self.assertEqual(new_val, 100)
-    
+
     def test_mute_toggle(self):
         """Test mute toggle."""
         mute = MuteControl()
-        
+
         self.assertFalse(mute.muted)
-        
+
         mute.toggle()
         self.assertTrue(mute.muted)
-        
+
         mute.toggle()
         self.assertFalse(mute.muted)
-    
+
     def test_mute_set(self):
         """Test mute set."""
         mute = MuteControl()
-        
+
         mute.set(True)
         self.assertTrue(mute.muted)
-        
+
         mute.set(False)
         self.assertFalse(mute.muted)
-    
+
     def test_sidetone_range(self):
         """Test sidetone control range validation."""
         sidetone = SidetoneControl()
-        
+
         sidetone.set(0)
         self.assertEqual(sidetone.value, 0)
-        
+
         sidetone.set(100)
         self.assertEqual(sidetone.value, 100)
-        
+
         with self.assertRaises(ValueError):
             sidetone.set(-1)
-        
+
         with self.assertRaises(ValueError):
             sidetone.set(101)
-    
+
     def test_sidetone_unsupported(self):
         """Test sidetone not supported flag."""
         sidetone = SidetoneControl()
         sidetone.supported = False
-        
+
         # set() should raise NotImplementedError when not supported
         with self.assertRaises(NotImplementedError):
             sidetone.set(50)
-        
+
         # Note: increment() does NOT check supported flag,
         # it just clamps the value. This is a design choice.
 
@@ -138,26 +137,26 @@ class TestControlsState(unittest.TestCase):
 class TestControlDocumentation(unittest.TestCase):
     """
     Document which controls actually work on the GSP 670.
-    
+
     This test documents the expected behavior based on analysis and testing.
     """
-    
+
     def test_volume_control_documentation(self):
         """Document volume control behavior."""
         # Based on analysis:
         # - Volume wheel generates HID reports (Report ID 0x02)
         # - Volume range is 0-100
         # - Software volume control may not actually affect hardware volume
-        
+
         volume = VolumeControl()
-        
+
         # Test range
         volume.set(0)
         self.assertEqual(volume.value, 0)
-        
+
         volume.set(100)
         self.assertEqual(volume.value, 100)
-        
+
         # The volume wheel on the headset generates HID events
         # but the actual volume may be controlled by the headset firmware
         print("\nVolume Control Documentation:")
@@ -165,40 +164,39 @@ class TestControlDocumentation(unittest.TestCase):
         print("  - HID Report ID: 0x02")
         print("  - Software volume: 0-100 range tracking only")
         print("  - Actual volume may be controlled by headset firmware")
-    
+
     def test_mute_control_documentation(self):
         """Document mute control behavior."""
         # Based on analysis:
         # - Mute button generates HID reports (Report ID 0x06)
         # - Mute toggles audio playback/capture
-        
-        mute = MuteControl()
-        
+
         print("\nMute Control Documentation:")
         print("  - Physical control: Mute button on headset")
         print("  - HID Report ID: 0x06")
         print("  - Behavior: Toggle mute state")
         print("  - Effect: Silences microphone and/or speakers")
-    
+        print("  - Note: mute is an OS-side mixer control, not a device command")
+
     def test_sidetone_control_documentation(self):
         """Document sidetone control behavior."""
         # Sidetone lets you hear your own voice in the headset
         # This feature may or may not be supported depending on firmware
-        
+
         sidetone = SidetoneControl()
         sidetone.supported = False  # Many firmwares don't support this
-        
+
         print("\nSidetone Control Documentation:")
         print("  - Physical control: None (software only if supported)")
         print("  - Purpose: Hear your own voice in headset")
         print("  - Support: Varies by firmware version")
         print("  - If not supported, software calls will raise NotImplementedError")
-    
+
     def test_media_controls_documentation(self):
         """Document media control behavior."""
         # The headset has media controls (play/pause, next, prev)
         # HID Report ID 0x08 with 4 1-bit fields
-        
+
         print("\nMedia Controls Documentation:")
         print("  - Play/Pause button")
         print("  - Next track button")
@@ -288,7 +286,7 @@ class TestSecomOpcodes(unittest.TestCase):
         self.assertEqual(SecomOpcode.GET_LATENCY, 0x17)
 
     def test_request_payloads(self):
-        from gsp670.protocol import secom_request, SecomOpcode
+        from gsp670.protocol import SecomOpcode, secom_request
         self.assertEqual(secom_request(SecomOpcode.GET_FW_VERSION),
                          bytes.fromhex('01000300'))
         self.assertEqual(secom_request(SecomOpcode.GET_DEVICE_NAME),
@@ -300,7 +298,7 @@ class TestSecomOpcodes(unittest.TestCase):
                          bytes.fromhex('0a0011000700'))
 
     def test_setter_requires_value(self):
-        from gsp670.protocol import secom_request, SecomOpcode
+        from gsp670.protocol import SecomOpcode, secom_request
         with self.assertRaises(ValueError):
             secom_request(SecomOpcode.SET_SIDETONE)
 

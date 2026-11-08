@@ -13,17 +13,17 @@ Event key format: ``<word0 u16 LE> <word1 u16 LE> [<variant u16 LE>]``
 Reference: analysis/session-handshake.md §6.1 (corrected 2026-10-13).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from enum import IntEnum
-from typing import Optional, Tuple, Any
+from typing import Any
 
 from .protocol import (
+    EVENT_KEYS,
+    EVENT_PAYLOAD,
     Frame,
     decode_event_key,
-    EVENT_PAYLOAD,
-    EVENT_KEYS,
 )
-
 
 # ---------------------------------------------------------------------
 # Event dataclasses
@@ -33,7 +33,7 @@ from .protocol import (
 class BatteryEvent:
     """Battery status event."""
     level: int  # 0-100 percentage
-    charging_changed: Optional[int] = None  # u16 charging state
+    charging_changed: int | None = None  # u16 charging state
     raw_payload: bytes = b''
 
     @property
@@ -290,13 +290,13 @@ def _key_length(name: str) -> int:
     """Return the byte length of an event key (4 or 6)."""
     # Two-word keys (no variant): 4 bytes
     # Three-word keys (with variant): 6 bytes
-    for (w0, w1, var), n in EVENT_KEYS.items():
+    for (_w0, _w1, var), n in EVENT_KEYS.items():
         if n == name:
             return 6 if var is not None else 4
     return 0  # Unknown key
 
 
-def _parse_value(name: str, payload: bytes) -> Tuple[Any, ...]:
+def _parse_value(name: str, payload: bytes) -> tuple[Any, ...]:
     """
     Parse value bytes from an event payload based on EVENT_PAYLOAD schema.
 
@@ -347,7 +347,7 @@ def parse_event_payload(payload: bytes):
     if decoded is None or decoded[0] is None:
         return None
 
-    name, word0, word1, variant = decoded
+    name, _word0, _word1, _variant = decoded
     values = _parse_value(name, payload)
 
     # Battery events

@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Extended opcode discovery for GSP 670 - Focused scan"""
-import sys, time
+import json
+import sys
+import time
+
 sys.path.insert(0, 'src')
-from gsp670.protocol import frame, classify, VID, PID_GSA70, PID_GSP670, USAGE_PAGE
 import hid
+
+from gsp670.protocol import PID_GSA70, PID_GSP670, USAGE_PAGE, VID, classify, frame
+
 
 def probe_device(vid, pid, name, opcode_ranges):
     """Probe device for opcode responses"""
     results = {'ack': [], 'nak': [], 'other': [], 'error': []}
     device_found = False
-    
+
     for d in hid.enumerate(vid, pid):
         if d['usage_page'] == USAGE_PAGE:
             device_found = True
@@ -17,10 +22,10 @@ def probe_device(vid, pid, name, opcode_ranges):
             dev.open_path(d['path'])
             dev.set_nonblocking(True)
             print(f"Probing {name} at {d['path'].decode()}")
-            
+
             total_opcodes = sum(end - start + 1 for start, end in opcode_ranges)
             print(f"Probing {total_opcodes} opcodes...")
-            
+
             for start, end in opcode_ranges:
                 for opcode in range(start, end + 1):
                     try:
@@ -39,13 +44,13 @@ def probe_device(vid, pid, name, opcode_ranges):
                                 results['other'].append((opcode, kind, c.payload))
                     except Exception as e:
                         results['error'].append((opcode, str(e)))
-            
+
             dev.close()
             break
-    
+
     if not device_found:
         print(f"Device {name} ({vid:04x}:{pid:04x}) not found")
-    
+
     return results
 
 # Focused probe ranges - limited to most likely opcode ranges
@@ -81,7 +86,6 @@ for name, results in [("Headset", headset_results), ("Dongle", dongle_results)]:
     print(f"{name}: ACK={len(results['ack'])}, NAK={len(results['nak'])}, Other={len(results['other'])}, Error={len(results['error'])}")
 
 # Save results for analysis
-import json
 all_results = {
     'headset': headset_results,
     'dongle': dongle_results,
@@ -91,9 +95,7 @@ all_results = {
 with open('opcode-discovery-results.json', 'w') as f:
     serializable = {}
     for key, results in all_results.items():
-        if key == 'timestamp':
-            serializable[key] = results
-        elif key == 'ranges_probed':
+        if key == 'timestamp' or key == 'ranges_probed':
             serializable[key] = results
         else:
             serializable[key] = {

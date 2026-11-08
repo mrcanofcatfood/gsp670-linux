@@ -15,13 +15,13 @@ of an opaque ``ImportError``.
 from __future__ import annotations
 
 import importlib
-from typing import Any, Optional
+from typing import Any
 
 __all__ = [
     "MissingDependency",
-    "require_hid",
-    "require_dbus",
     "have_dbus",
+    "require_dbus",
+    "require_hid",
 ]
 
 
@@ -29,7 +29,7 @@ class MissingDependency(ImportError):
     """Raised when an optional dependency is required but not installed."""
 
 
-def _install_hint(module: str, extra: Optional[str] = None) -> str:
+def _install_hint(module: str, extra: str | None = None) -> str:
     """Build an actionable error message for a missing dependency."""
     if extra:
         return (
@@ -86,9 +86,9 @@ def require_dbus() -> tuple[Any, Any]:
             setattr(dbus, name, mod)
 
     if getattr(dbus_mainloop, "glib", None) is not dbus_mainloop_glib:
-        setattr(dbus_mainloop, "glib", dbus_mainloop_glib)
+        dbus_mainloop.glib = dbus_mainloop_glib
     if getattr(dbus, "mainloop", None) is not dbus_mainloop:
-        setattr(dbus, "mainloop", dbus_mainloop)
+        dbus.mainloop = dbus_mainloop
 
     return dbus, glib
 

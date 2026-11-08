@@ -33,7 +33,6 @@ import argparse
 import math
 import os
 import shutil
-import struct
 import subprocess
 import sys
 import tempfile

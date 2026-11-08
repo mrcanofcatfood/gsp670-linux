@@ -5,24 +5,35 @@ Device abstraction for EPOS|Sennheiser GSP 670 and GSA 70 devices.
 Provides high-level interface to HID communication with the headset and dongle.
 """
 
+from __future__ import annotations
+
 import asyncio
 import time
-from dataclasses import dataclass, field
-from typing import Optional, List, Callable, Generator, Any
+from dataclasses import dataclass
+from typing import Any, Callable
 
 from ._compat import require_hid
-from .protocol import (
-    VID, PID_GSA70, PID_GSP670, USAGE_PAGE, USAGE,
-    RPT, REPORT_LEN, MARKER_HOST, MARKER_DEVICE, MARKER_ACK,
-    frame, classify, validate_frame, Frame,
-    expected_reply_opcode, crc8, Opcode,
-    SecomOpcode, secom_request, secom_value,
-)
 from .events import (
-    parse_frame_event,
     BatteryEvent,
     LinkEvent,
     SubDevicesEvent,
+    parse_frame_event,
+)
+from .protocol import (
+    MARKER_DEVICE,
+    MARKER_HOST,
+    PID_GSA70,
+    PID_GSP670,
+    RPT,
+    USAGE,
+    USAGE_PAGE,
+    VID,
+    Frame,
+    SecomOpcode,
+    classify,
+    frame,
+    secom_request,
+    secom_value,
 )
 
 
@@ -31,13 +42,13 @@ class DeviceInfo:
     """Information about a discovered device."""
     vid: int
     pid: int
-    firmware_version: Optional[str] = None
-    path: Optional[str] = None
+    firmware_version: str | None = None
+    path: str | None = None
     usage_page: int = 0
     usage: int = 0
-    serial: Optional[str] = None
-    product_string: Optional[str] = None
-    manufacturer_string: Optional[str] = None
+    serial: str | None = None
+    product_string: str | None = None
+    manufacturer_string: str | None = None
     interface: int = -1
     is_dongle: bool = False
     is_headset: bool = False
@@ -99,43 +110,43 @@ class CommunicationError(DeviceError):
 class GSP670Device:
     """
     GSP 670 headset device.
-    
+
     Represents the headset HID interface (PID 0x008a).
     Typically accessed through the GSA 70 dongle, but can also be
     accessed directly when the headset is in device mode.
     """
-    
-    def __init__(self, path: Optional[str] = None, device_info: Optional[DeviceInfo] = None):
+
+    def __init__(self, path: str | None = None, device_info: DeviceInfo | None = None):
         """
         Initialize device handle.
-        
+
         Args:
             path: HID device path (if not using device_info)
             device_info: DeviceInfo from discovery (optional)
         """
-        self._dev: Optional[Any] = None
+        self._dev: Any | None = None
         self._path = path
         self._info = device_info or DeviceInfo(
             vid=VID, pid=PID_GSP670, is_headset=True
         )
         self._connected = False
-        self._read_callbacks: List[Callable[[Frame], None]] = []
-    
+        self._read_callbacks: list[Callable[[Frame], None]] = []
+
     @property
     def info(self) -> DeviceInfo:
         """Get device information."""
         return self._info
-    
+
     @property
     def is_connected(self) -> bool:
         """Check if device is connected."""
         return self._connected
-    
+
     def open(self) -> None:
         """Open the HID device."""
         if self._connected:
             return
-        
+
         if self._path is None and self._info.path is None:
             # Try to find device
             hid = require_hid()
@@ -146,7 +157,7 @@ class GSP670Device:
                     break
             else:
                 raise DeviceNotFoundError("GSP 670 headset not found", device_type='headset')
-        
+
         try:
             hid = require_hid()
             self._dev = hid.device()
@@ -157,21 +168,21 @@ class GSP670Device:
             self._connected = False
             raise DeviceError(
                 f"Permission denied accessing the device: {e}. "
-                "Try adding your user to the 'plugdev' group: 'sudo usermod -aG plugdev $USER'. "
+                "Try adding your user to the 'audio' group: 'sudo usermod -aG audio $USER'. "
                 "You may need to log out and back in for changes to take effect, "
                 "or run the application with sudo for a quick test."
-            )
+            ) from e
         except Exception as e:
             self._connected = False
             error_str = str(e).lower()
             if 'permission' in error_str or 'access' in error_str:
                 raise DeviceError(
                     f"Permission denied: {e}. "
-                    "Add your user to 'plugdev' group: 'sudo usermod -aG plugdev $USER'. "
+                    "Add your user to the 'audio' group: 'sudo usermod -aG audio $USER'. "
                     "Then log out and back in."
-                )
-            raise DeviceError(f"Failed to open device: {e}")
-    
+                ) from e
+            raise DeviceError(f"Failed to open device: {e}") from e
+
     def close(self) -> None:
         """Close the HID device."""
         if self._dev:
@@ -181,7 +192,7 @@ class GSP670Device:
                 pass
             self._dev = None
         self._connected = False
-    
+
     def _update_info_from_enumeration(self, d: dict) -> None:
         """Update device info from hidapi enumeration."""
         self._info.path = d['path']
@@ -191,25 +202,25 @@ class GSP670Device:
         self._info.usage_page = d.get('usage_page', 0)
         self._info.usage = d.get('usage', 0)
         self._info.interface = d.get('interface_number', -1)
-    
+
     def write(self, opcode: int, payload: bytes = b'') -> int:
         """
         Send a Capricorn frame to the device.
-        
+
         Args:
             opcode: Capricorn opcode
             payload: Payload bytes
-        
+
         Returns:
             Number of bytes written
-        
+
         Raises:
             DeviceDisconnectedError: If device is disconnected
             CommunicationError: If write fails
         """
         if not self._connected or not self._dev:
             raise DeviceDisconnectedError("Device not connected")
-        
+
         data = frame(opcode, payload, MARKER_HOST)
         try:
             n = self._dev.write(data)
@@ -217,29 +228,29 @@ class GSP670Device:
                 raise CommunicationError(f"Write failed with code {n}")
             return n
         except OSError as e:
-            raise DeviceDisconnectedError(f"Device disconnected: {e}")
-    
-    def read(self, timeout_ms: int = 100) -> Optional[Frame]:
+            raise DeviceDisconnectedError(f"Device disconnected: {e}") from e
+
+    def read(self, timeout_ms: int = 100) -> Frame | None:
         """
         Read and parse a frame from the device.
-        
+
         Args:
             timeout_ms: Read timeout in milliseconds
-        
+
         Returns:
             Parsed Frame or None if no data available
         """
         if not self._connected or not self._dev:
             return None
-        
+
         try:
             raw = self._dev.read(RPT + 1, timeout_ms)
         except OSError:
             return None
-        
+
         if not raw:
             return None
-        
+
         f = classify(bytes(raw))
         for cb in list(self._read_callbacks):
             try:
@@ -247,14 +258,14 @@ class GSP670Device:
             except Exception:
                 pass
         return f
-    
-    def drain(self, seconds: float = 0.5) -> List[Frame]:
+
+    def drain(self, seconds: float = 0.5) -> list[Frame]:
         """
         Drain all pending frames from the device.
-        
+
         Args:
             seconds: Drain duration
-        
+
         Returns:
             List of received frames
         """
@@ -265,21 +276,21 @@ class GSP670Device:
             if f:
                 frames.append(f)
         return frames
-    
-    def exchange(self, opcode: int, payload: bytes = b'', 
+
+    def exchange(self, opcode: int, payload: bytes = b'',
                  timeout_ms: int = 500, retry: int = 3) -> Frame:
         """
         Send a frame and wait for a response.
-        
+
         Args:
             opcode: Capricorn opcode
             payload: Payload bytes
             timeout_ms: Response timeout
             retry: Number of retries on communication error
-        
+
         Returns:
             Response frame
-        
+
         Raises:
             CommunicationError: If no response received
         """
@@ -288,17 +299,17 @@ class GSP670Device:
             try:
                 # Drain any pending data
                 self.drain(0.05)
-                
+
                 # Send request
                 self.write(opcode, payload)
-                
+
                 # Wait for response
                 end = time.time() + (timeout_ms / 1000)
                 while time.time() < end:
                     f = self.read(timeout_ms=min(100, timeout_ms))
                     if f and f.kind in ('ack', 'nak'):
                         return f
-                
+
                 # No response
                 last_error = CommunicationError(
                     f"No response to opcode 0x{opcode:04X} after {timeout_ms}ms. "
@@ -312,21 +323,21 @@ class GSP670Device:
                 last_error = e
                 if attempt < retry - 1:
                     time.sleep(0.1)
-        
+
         raise last_error or CommunicationError(
             f"Failed to communicate with device after {retry} attempts. "
             "Try checking the device connection or using a different USB port."
         )
-    
+
     def __enter__(self):
         """Context manager entry."""
         self.open()
         return self
-    
+
     def __exit__(self, *args):
         """Context manager exit."""
         self.close()
-    
+
     def __del__(self):
         """Destructor."""
         self.close()
@@ -376,26 +387,26 @@ class GSP670Device:
 class GSA70Device:
     """
     GSA 70 dongle device.
-    
+
     Represents the dongle HID interface (PID 0x0300).
     This is the primary interface for communicating with the GSP 670 headset.
     """
-    
-    def __init__(self, path: Optional[str] = None, device_info: Optional[DeviceInfo] = None):
+
+    def __init__(self, path: str | None = None, device_info: DeviceInfo | None = None):
         """
         Initialize device handle.
-        
+
         Args:
             path: HID device path (if not using device_info)
             device_info: DeviceInfo from discovery (optional)
         """
-        self._dev: Optional[Any] = None
+        self._dev: Any | None = None
         self._path = path
         self._info = device_info or DeviceInfo(
             vid=VID, pid=PID_GSA70, is_dongle=True
         )
         self._connected = False
-        self._read_callbacks: List[Callable[[Frame], None]] = []
+        self._read_callbacks: list[Callable[[Frame], None]] = []
 
     @property
     def info(self) -> DeviceInfo:
@@ -433,21 +444,21 @@ class GSA70Device:
             self._connected = False
             raise DeviceError(
                 f"Permission denied accessing the device: {e}. "
-                "Try adding your user to the 'plugdev' group: 'sudo usermod -aG plugdev $USER'. "
+                "Try adding your user to the 'audio' group: 'sudo usermod -aG audio $USER'. "
                 "You may need to log out and back in for changes to take effect, "
                 "or run the application with sudo for a quick test."
-            )
+            ) from e
         except Exception as e:
             self._connected = False
             error_str = str(e).lower()
             if 'permission' in error_str or 'access' in error_str:
                 raise DeviceError(
                     f"Permission denied: {e}. "
-                    "Add your user to 'plugdev' group: 'sudo usermod -aG plugdev $USER'. "
+                    "Add your user to the 'audio' group: 'sudo usermod -aG audio $USER'. "
                     "Then log out and back in."
-                )
-            raise DeviceError(f"Failed to open device: {e}")
-    
+                ) from e
+            raise DeviceError(f"Failed to open device: {e}") from e
+
     def close(self) -> None:
         """Close the HID device."""
         if self._dev:
@@ -457,7 +468,7 @@ class GSA70Device:
                 pass
             self._dev = None
         self._connected = False
-    
+
     def _update_info_from_enumeration(self, d: dict) -> None:
         """Update device info from hidapi enumeration."""
         self._info.path = d['path']
@@ -467,25 +478,25 @@ class GSA70Device:
         self._info.usage_page = d.get('usage_page', 0)
         self._info.usage = d.get('usage', 0)
         self._info.interface = d.get('interface_number', -1)
-    
+
     def write(self, opcode: int, payload: bytes = b'') -> int:
         """
         Send a Capricorn frame to the device.
-        
+
         Args:
             opcode: Capricorn opcode
             payload: Payload bytes
-        
+
         Returns:
             Number of bytes written
-        
+
         Raises:
             DeviceDisconnectedError: If device is disconnected
             CommunicationError: If write fails
         """
         if not self._connected or not self._dev:
             raise DeviceDisconnectedError("Device not connected")
-        
+
         data = frame(opcode, payload, MARKER_HOST)
         try:
             n = self._dev.write(data)
@@ -493,29 +504,29 @@ class GSA70Device:
                 raise CommunicationError(f"Write failed with code {n}")
             return n
         except OSError as e:
-            raise DeviceDisconnectedError(f"Device disconnected: {e}")
-    
-    def read(self, timeout_ms: int = 100) -> Optional[Frame]:
+            raise DeviceDisconnectedError(f"Device disconnected: {e}") from e
+
+    def read(self, timeout_ms: int = 100) -> Frame | None:
         """
         Read and parse a frame from the device.
-        
+
         Args:
             timeout_ms: Read timeout in milliseconds
-        
+
         Returns:
             Parsed Frame or None if no data available
         """
         if not self._connected or not self._dev:
             return None
-        
+
         try:
             raw = self._dev.read(RPT + 1, timeout_ms)
         except OSError:
             return None
-        
+
         if not raw:
             return None
-        
+
         f = classify(bytes(raw))
         for cb in list(self._read_callbacks):
             try:
@@ -523,14 +534,14 @@ class GSA70Device:
             except Exception:
                 pass
         return f
-    
-    def drain(self, seconds: float = 0.5) -> List[Frame]:
+
+    def drain(self, seconds: float = 0.5) -> list[Frame]:
         """
         Drain all pending frames from the device.
-        
+
         Args:
             seconds: Drain duration
-        
+
         Returns:
             List of received frames
         """
@@ -541,21 +552,21 @@ class GSA70Device:
             if f:
                 frames.append(f)
         return frames
-    
-    def exchange(self, opcode: int, payload: bytes = b'', 
+
+    def exchange(self, opcode: int, payload: bytes = b'',
                  timeout_ms: int = 500, retry: int = 3) -> Frame:
         """
         Send a frame and wait for a response.
-        
+
         Args:
             opcode: Capricorn opcode
             payload: Payload bytes
             timeout_ms: Response timeout
             retry: Number of retries on communication error
-        
+
         Returns:
             Response frame
-        
+
         Raises:
             CommunicationError: If no response received
         """
@@ -564,17 +575,17 @@ class GSA70Device:
             try:
                 # Drain any pending data
                 self.drain(0.05)
-                
+
                 # Send request
                 self.write(opcode, payload)
-                
+
                 # Wait for response
                 end = time.time() + (timeout_ms / 1000)
                 while time.time() < end:
                     f = self.read(timeout_ms=min(100, timeout_ms))
                     if f and f.kind in ('ack', 'nak'):
                         return f
-                
+
                 # No response
                 last_error = CommunicationError(
                     f"No response to opcode 0x{opcode:04X} after {timeout_ms}ms. "
@@ -588,12 +599,12 @@ class GSA70Device:
                 last_error = e
                 if attempt < retry - 1:
                     time.sleep(0.1)
-        
+
         raise last_error or CommunicationError(
             f"Failed to communicate with device after {retry} attempts. "
             "Try checking the device connection or using a different USB port."
         )
-    
+
     def add_read_callback(self, callback: Callable[[Frame], None]) -> None:
         """
         Register a callback invoked for every frame returned by :meth:`read`.
@@ -635,8 +646,8 @@ class GSA70Device:
             if f is not None:
                 yield f
 
-    def secom_exchange(self, opcode: int, value: Optional[int] = None,
-                       timeout_ms: int = 1000) -> Optional[Frame]:
+    def secom_exchange(self, opcode: int, value: int | None = None,
+                       timeout_ms: int = 1000) -> Frame | None:
         """
         Send a verified Capricorn/SECOM command and return the reply.
 
@@ -662,7 +673,7 @@ class GSA70Device:
         self.drain(0.05)
         self.write(opcode, payload)
 
-        ack: Optional[Frame] = None
+        ack: Frame | None = None
         end = time.time() + (timeout_ms / 1000)
         while time.time() < end:
             f = self.read(timeout_ms=100)
@@ -678,7 +689,7 @@ class GSA70Device:
                 ack = ack or f
         return ack
 
-    def get_firmware_version(self) -> Optional[str]:
+    def get_firmware_version(self) -> str | None:
         """Return the device firmware version, e.g. ``'3.14.2'``."""
         f = self.secom_exchange(SecomOpcode.GET_FW_VERSION)
         if f is None:
@@ -690,14 +701,14 @@ class GSA70Device:
                                for i in (0, 2, 4))
         return f"{major}.{minor}.{patch}"
 
-    def get_serial_number(self) -> Optional[str]:
+    def get_serial_number(self) -> str | None:
         """Return the serial number (ASCII, NUL padded)."""
         f = self.secom_exchange(SecomOpcode.GET_SERIAL_NO)
         if f is None:
             return None
         return secom_value(f).split(b'\x00', 1)[0].decode('ascii', 'replace') or None
 
-    def get_device_name(self) -> Optional[str]:
+    def get_device_name(self) -> str | None:
         """Return the device name (UTF-16LE), e.g. ``'EPOS GSA 70'``."""
         f = self.secom_exchange(SecomOpcode.GET_DEVICE_NAME)
         if f is None:
@@ -711,12 +722,12 @@ class GSA70Device:
             chars += raw[i:i + 2]
         return chars.decode('utf-16-le', 'replace') or None
 
-    def get_device_address(self) -> Optional[bytes]:
+    def get_device_address(self) -> bytes | None:
         """Return the raw Bluetooth/device address blob."""
         f = self.secom_exchange(SecomOpcode.GET_DEVICE_ADDRESS)
         return None if f is None else secom_value(f)
 
-    def get_subdevices_connected(self) -> Optional[int]:
+    def get_subdevices_connected(self) -> int | None:
         """Return the number of connected sub-devices (headset link status)."""
         f = self.secom_exchange(SecomOpcode.GET_SUBDEVICES_CONNECTED)
         if f is None:
@@ -724,7 +735,7 @@ class GSA70Device:
         v = secom_value(f)
         return int.from_bytes(v[:2], 'little') if len(v) >= 2 else None
 
-    def get_battery_percentage(self) -> Optional[int]:
+    def get_battery_percentage(self) -> int | None:
         """
         Return the headset battery percentage, or ``None``.
 
@@ -741,7 +752,7 @@ class GSA70Device:
             return None
         return (v[0] | (v[1] if len(v) > 1 else 0)) & 0xFF
 
-    def get_sidetone(self) -> Optional[int]:
+    def get_sidetone(self) -> int | None:
         """Return the sidetone level (requires a linked headset)."""
         f = self.secom_exchange(SecomOpcode.GET_SIDETONE)
         if f is None:
@@ -754,7 +765,7 @@ class GSA70Device:
         f = self.secom_exchange(SecomOpcode.SET_SIDETONE, value=int(level) & 0xFF)
         return f is not None and f.kind != 'nak'
 
-    def get_noise_reduction(self) -> Optional[int]:
+    def get_noise_reduction(self) -> int | None:
         """Return the noise-reduction level (requires a linked headset)."""
         f = self.secom_exchange(SecomOpcode.GET_NOISE_REDUCTION)
         if f is None:
@@ -767,7 +778,7 @@ class GSA70Device:
         f = self.secom_exchange(SecomOpcode.SET_NOISE_REDUCTION, value=int(level) & 0xFF)
         return f is not None and f.kind != 'nak'
 
-    def get_latency(self) -> Optional[int]:
+    def get_latency(self) -> int | None:
         """Return the audio latency level (requires a linked headset)."""
         f = self.secom_exchange(SecomOpcode.GET_LATENCY)
         if f is None:
@@ -775,7 +786,7 @@ class GSA70Device:
         v = secom_value(f)
         return v[0] if v else None
 
-    def get_auto_power_off(self) -> Optional[int]:
+    def get_auto_power_off(self) -> int | None:
         """Return the auto-power-off timer status."""
         f = self.secom_exchange(SecomOpcode.GET_AUTO_POWER_OFF)
         if f is None:
@@ -802,8 +813,8 @@ class GSA70Device:
             "Use the verified SECOM methods (get_sidetone(), "
             "get_battery_percentage(), ...) instead."
         )
-    
-    def set_feature(self, feature_index: int, data: bytes = b'', 
+
+    def set_feature(self, feature_index: int, data: bytes = b'',
                     timeout_ms: int = 500) -> bool:
         """
         DEPRECATED / INVALID - do not use.
@@ -817,7 +828,7 @@ class GSA70Device:
             "Use the verified SECOM setters (set_sidetone(), "
             "set_noise_reduction(), set_auto_power_off()) instead."
         )
-    
+
     def get_volume(self) -> int:
         """
         Get master volume level.

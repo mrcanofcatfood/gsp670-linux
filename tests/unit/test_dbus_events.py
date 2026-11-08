@@ -16,7 +16,7 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 from gsp670.dbus_service import Gsp670DBusService
 from gsp670.device import GSA70Device
-from gsp670.protocol import crc8, SYNC, MARKER_EVENT_BURST
+from gsp670.protocol import MARKER_EVENT_BURST, SYNC, crc8
 
 # Event payload keys:
 BATTERY_PERCENTAGE = bytes.fromhex('12000f000400')   # u8 level

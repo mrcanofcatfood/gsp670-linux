@@ -12,26 +12,25 @@ Usage:
     python -m gsp670.daemon [--log-file PATH] [-v]
 """
 
-import os
-import sys
-import csv
-import time
 import argparse
+import csv
 import logging
+import sys
 import threading
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
-# When run as 'python -m gsp670.daemon' from src/, the parent of src/ should
-# be on the path so 'from gsp670 import ...' works.
+# When run as 'python -m gsp670.daemon' from a source checkout, the parent of
+# src/ should be on the path so 'from gsp670 import ...' works.
 _root = Path(__file__).resolve().parents[2]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from gsp670._compat import MissingDependency
+from gsp670._compat import MissingDependency  # noqa: E402
 
 try:
-    from gsp670.dbus_service import Gsp670DBusService, BUS_NAME
+    from gsp670.dbus_service import BUS_NAME, Gsp670DBusService
 except MissingDependency as _exc:
     # The daemon is an optional extra; surface the actionable install hint
     # instead of a bare ImportError traceback.
@@ -46,15 +45,15 @@ logger = logging.getLogger('gsp670.daemon')
 class BatteryLogger:
     """
     Appends battery state to a CSV log file.
-    
+
     Log format: timestamp,level,charging
     """
-    
+
     def __init__(self, log_path: Path):
         self._path = log_path
         self._lock = threading.Lock()
         self._ensure_header()
-    
+
     def _ensure_header(self):
         """Create file with header if it doesn't exist."""
         if not self._path.exists():
@@ -62,7 +61,7 @@ class BatteryLogger:
             with open(self._path, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['timestamp', 'level', 'charging'])
-    
+
     def log(self, level: int, charging: bool):
         """Append a battery reading."""
         with self._lock:
@@ -81,18 +80,18 @@ class BatteryLogger:
 class Daemon(Gsp670DBusService):
     """
     Extended D-Bus service that also logs battery state.
-    
+
     Inherits all D-Bus methods and signals from Gsp670DBusService,
     and adds battery logging on BatteryChanged signals.
     """
-    
+
     def __init__(self, bus, device_mode: str = 'dongle',
-                 battery_log_path: Path = None):
+                 battery_log_path: Optional[Path] = None):
         super().__init__(bus, device_mode)
         self._battery_logger = None
         if battery_log_path:
             self._battery_logger = BatteryLogger(battery_log_path)
-    
+
     def BatteryChanged(self, level: int, charging: bool):
         """Override to also log battery state."""
         # Call the parent signal emitter
@@ -104,33 +103,33 @@ class Daemon(Gsp670DBusService):
 
 def _run_daemon(bus_type: str = 'system',
                 device_mode: str = 'dongle',
-                battery_log_path: Path = None,
+                battery_log_path: Optional[Path] = None,
                 verbose: bool = False):
     """Run the full daemon (D-Bus + battery logger)."""
     import dbus
     import dbus.mainloop.glib
     from gi.repository import GLib
-    
-    from gsp670.dbus_service import _request_bus_name, Gsp670DBusService
-    
+
+    from gsp670.dbus_service import _request_bus_name
+
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    
+
     if bus_type == 'session':
         bus = dbus.SessionBus()
     else:
         bus = dbus.SystemBus()
-    
+
     if not _request_bus_name(bus):
         logger.error(f"Bus name {BUS_NAME} is already taken")
         sys.exit(1)
-    
+
     service = Daemon(bus, device_mode=device_mode,
                      battery_log_path=battery_log_path)
     service.start()
-    
+
     logger.info(f"GSP 670 daemon running on {bus_type} bus")
     logger.info(f"Battery log: {battery_log_path or 'disabled'}")
-    
+
     try:
         mainloop = GLib.MainLoop()
         mainloop.run()
@@ -142,7 +141,7 @@ def _run_daemon(bus_type: str = 'system',
 def main():
     # Default log location: XDG_DATA_HOME/gsp670/battery-log.csv
     default_log = Path.home() / '.local' / 'share' / 'gsp670' / 'battery-log.csv'
-    
+
     parser = argparse.ArgumentParser(description='GSP 670 Daemon')
     parser.add_argument('--bus', choices=['system', 'session'], default='system',
                         help='D-Bus bus to use (default: system)')
@@ -155,14 +154,14 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Enable verbose logging')
     args = parser.parse_args()
-    
+
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(asctime)s %(name)s: %(levelname)s %(message)s'
     )
-    
+
     log_path = None if args.no_log else args.log_file
-    
+
     _run_daemon(
         bus_type=args.bus,
         device_mode=args.device,

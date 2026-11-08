@@ -13,11 +13,11 @@ import unittest
 sys.path.insert(0, 'src')
 
 from gsp670.controls import (
-    SecomControl,
-    VolumeControl,
-    MuteControl,
-    SidetoneControl,
     ControlsState,
+    MuteControl,
+    SecomControl,
+    SidetoneControl,
+    VolumeControl,
     volume_delta_to_level,
 )
 

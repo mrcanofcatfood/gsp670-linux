@@ -7,23 +7,22 @@ and opcode transform.
 """
 
 import unittest
+
 from gsp670.protocol import (
-    crc8,
-    frame,
-    classify,
-    expected_reply_opcode,
-    validate_frame,
-    marker_transform,
-    secom_value,
-    MARKER_HOST,
-    MARKER_DEVICE,
     MARKER_ACK,
-    MARKER_NAK,
+    MARKER_DEVICE,
     MARKER_EVENT_BURST,
     MARKER_EVENT_POLL,
+    MARKER_HOST,
+    MARKER_NAK,
     SYNC,
-    RPT,
-    Frame,
+    classify,
+    crc8,
+    expected_reply_opcode,
+    frame,
+    marker_transform,
+    secom_value,
+    validate_frame,
 )
 
 
@@ -54,22 +53,22 @@ class TestFrameEncoding(unittest.TestCase):
     def test_frame_minimal(self):
         """Test encoding a frame with no payload."""
         data = frame(0x4F12, b'')
-        
+
         # Should be 107 bytes (1 report id + 106 data)
         self.assertEqual(len(data), 107)
-        
+
         # Report ID should be 0x01
         self.assertEqual(data[0], 0x01)
-        
+
         # Sync bytes at offset 1-4
         self.assertEqual(data[1:5], SYNC)
-        
+
         # Marker at offset 5-6
         self.assertEqual(data[5:7], MARKER_HOST)
-        
+
         # Opcode at offset 7-8 (little endian)
         self.assertEqual(data[7:9], b'\x12\x4F')
-        
+
         # Size at offset 9-10 (little endian)
         self.assertEqual(data[9:11], b'\x00\x00')
 
@@ -77,14 +76,14 @@ class TestFrameEncoding(unittest.TestCase):
         """Test encoding a frame with payload."""
         payload = b'\x01\x02\x03\x04\x05'
         data = frame(0x4F12, payload)
-        
+
         # Size should be 5
         self.assertEqual(data[9:11], b'\x05\x00')
-        
+
         # CRC should be computed over payload only
         expected_crc = crc8(payload)
         self.assertEqual(data[11], expected_crc)
-        
+
         # Payload at offset 13+
         self.assertEqual(data[13:18], payload)
 
@@ -103,7 +102,7 @@ class TestFrameClassification(unittest.TestCase):
         # ACK marker is 05 30
         raw = bytes([0x01]) + SYNC + MARKER_ACK + b'\x12\x4F' + b'\x00\x00' + b'\xFF' + b'\x00'
         raw += b'\x00' * 94  # Padding
-        
+
         f = classify(raw)
         self.assertEqual(f.kind, 'ack')
 
@@ -112,7 +111,7 @@ class TestFrameClassification(unittest.TestCase):
         # NAK marker is 04 10
         raw = bytes([0x01]) + SYNC + MARKER_NAK + b'\x00\x00' + b'\x00\x00' + b'\xFF' + b'\x00'
         raw += b'\x00' * 94
-        
+
         f = classify(raw)
         self.assertEqual(f.kind, 'nak')
 
@@ -121,7 +120,7 @@ class TestFrameClassification(unittest.TestCase):
         # Device marker is 10 01
         raw = bytes([0x01]) + SYNC + MARKER_DEVICE + b'\x00\x4F' + b'\x00\x00' + b'\x00' + b'\x00'
         raw += b'\x00' * 94
-        
+
         f = classify(raw)
         self.assertEqual(f.kind, 'other')
 
@@ -260,10 +259,10 @@ class TestValidateFrame(unittest.TestCase):
         payload = b'\x01\x02\x03'
         data = frame(0x4F12, payload)
         f = classify(data)
-        
+
         # Manually set kind to ack for validation
         f.kind = 'ack'
-        
+
         is_valid, msg = validate_frame(f)
         self.assertTrue(is_valid)
         self.assertEqual(msg, '')
@@ -273,7 +272,7 @@ class TestValidateFrame(unittest.TestCase):
         raw = bytes([0x01, 0x00, 0x01, 0x00, 0x00]) + MARKER_ACK + b'\x00\x00' + b'\x00\x00' + b'\xFF' + b'\x00'
         raw += b'\x00' * 94
         f = classify(raw)
-        
+
         is_valid, msg = validate_frame(f)
         self.assertFalse(is_valid)
         self.assertIn('sync', msg.lower())

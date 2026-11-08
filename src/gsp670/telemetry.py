@@ -53,19 +53,19 @@ class BatteryState:
     charging: ChargingState = ChargingState.NOT_CHARGING
     critical: bool = False
     low: bool = False
-    
+
     def is_charging(self) -> bool:
         """Check if battery is currently charging."""
         return self.charging == ChargingState.CHARGING
-    
+
     def is_full(self) -> bool:
         """Check if battery is fully charged."""
         return self.charging == ChargingState.FULL
-    
+
     def is_critical(self) -> bool:
         """Check if battery level is critical (<10%)."""
         return self.level < BatteryLevel.CRITICAL or self.critical
-    
+
     def is_low(self) -> bool:
         """Check if battery level is low (<20%)."""
         return self.level < BatteryLevel.LOW or self.low
@@ -78,7 +78,7 @@ class LinkState:
     rssi: int = 0  # Received Signal Strength Indicator
     channel: int = 0
     hopping: bool = False
-    
+
     def is_connected(self) -> bool:
         """Check if link is established."""
         return self.quality >= LinkQuality.FAIR
@@ -93,13 +93,13 @@ class HeadsetStatus:
     dongle_firmware: Optional[str] = None
     headset_firmware: Optional[str] = None
     device_mode: str = "unknown"
-    
+
     def __post_init__(self):
         if self.battery is None:
             self.battery = BatteryState()
         if self.link is None:
             self.link = LinkState()
-    
+
     def is_connected(self) -> bool:
         """Check if headset is connected and operational."""
         return self.link.is_connected() and self.battery.level > 0
@@ -132,25 +132,25 @@ def parse_fwu_status_ind(frame: Frame) -> Optional[HeadsetStatus]:
     """
     if frame.opcode != Opcode.FWU_STATUS_IND:
         return None
-    
+
     payload = frame.payload
     if len(payload) < 4:
         return None
-    
+
     status = HeadsetStatus()
-    
+
     # Try to parse status bytes
     # Note: The exact format of status notifications is not fully documented
     # This is a best-effort parser based on observed data
-    
+
     # Sequence/counter byte at offset 0
     # Status byte at offset 1 (varies by device state)
-    
+
     # Battery level (observed to be around byte 3-4 in some captures)
     # The byte at offset 4 changed between captures (0x10 vs 0xff)
-    
+
     # Link quality indicator may be present in later bytes
-    
+
     return status
 
 
@@ -171,14 +171,14 @@ def parse_device_notify_ind(frame: Frame) -> Optional[dict]:
     """
     if frame.opcode != Opcode.FWU_DEVICE_NOTIFY_IND:
         return None
-    
+
     payload = frame.payload
     if len(payload) < 2:
         return None
-    
+
     # Sub-opcode/module selector at byte 1 (0xFE in observed data)
     # Data follows
-    
+
     return {
         'sub_opcode': payload[0] if len(payload) > 0 else 0,
         'data': payload[1:]
@@ -188,35 +188,35 @@ def parse_device_notify_ind(frame: Frame) -> Optional[dict]:
 def format_battery_status(battery: BatteryState) -> str:
     """
     Format battery status as human-readable string.
-    
+
     Args:
         battery: BatteryState
-    
+
     Returns:
         Formatted string
     """
     level_str = f"{battery.level}%"
-    
+
     if battery.is_charging():
         level_str += " (charging)"
     elif battery.is_full():
         level_str += " (full)"
-    
+
     if battery.is_critical():
         level_str += " [CRITICAL]"
     elif battery.is_low():
         level_str += " [low]"
-    
+
     return level_str
 
 
 def format_link_status(link: LinkState) -> str:
     """
     Format link status as human-readable string.
-    
+
     Args:
         link: LinkState
-    
+
     Returns:
         Formatted string
     """
@@ -227,39 +227,39 @@ def format_link_status(link: LinkState) -> str:
         LinkQuality.GOOD: "Good",
         LinkQuality.EXCELLENT: "Excellent"
     }
-    
+
     status = quality_names.get(link.quality, "Unknown")
-    
+
     if link.rssi != 0:
         status += f" (RSSI: {link.rssi} dBm)"
-    
+
     return status
 
 
 def format_headset_status(status: HeadsetStatus) -> str:
     """
     Format complete headset status as human-readable string.
-    
+
     Args:
         status: HeadsetStatus
-    
+
     Returns:
         Formatted multi-line string
     """
     lines = []
-    
+
     lines.append("Headset Status")
     lines.append("-" * 40)
-    
+
     lines.append(f"Connection: {status.device_mode}")
-    
+
     if status.headset_firmware:
         lines.append(f"Headset FW: {status.headset_firmware}")
-    
+
     if status.dongle_firmware:
         lines.append(f"Dongle FW: {status.dongle_firmware}")
-    
+
     lines.append(f"Battery: {format_battery_status(status.battery)}")
     lines.append(f"Link: {format_link_status(status.link)}")
-    
+
     return "\n".join(lines)

@@ -12,10 +12,10 @@ is ``0x00F0`` for most notifications but varies by source component.
 import unittest
 
 from gsp670.protocol import (
-    EVENT_NAMESPACE,
-    EVENT_WORDS,
     EVENT_KEYS,
+    EVENT_NAMESPACE,
     EVENT_PAYLOAD,
+    EVENT_WORDS,
     decode_event_key,
     format_event_key,
 )

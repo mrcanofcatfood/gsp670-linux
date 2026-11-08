@@ -8,7 +8,7 @@ Uses a fake hid.device so no hardware is required.
 import unittest
 
 from gsp670.device import GSA70Device
-from gsp670.protocol import crc8, SYNC, MARKER_ACK, MARKER_EVENT_BURST
+from gsp670.protocol import MARKER_ACK, MARKER_EVENT_BURST, SYNC, crc8
 
 
 def _event_raw(payload: bytes) -> bytes:
