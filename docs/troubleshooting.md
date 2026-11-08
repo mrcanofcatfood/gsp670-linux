@@ -1,6 +1,28 @@
-# GSP 670 Troubleshooting Guide
+# Troubleshooting the GSP 670 / GSA 70 on Linux
 
-This guide covers common issues encountered when using the GSP 670 Python library on Linux.
+## Start here: run the doctor
+
+```bash
+./scripts/gsp670-audio-doctor.sh
+```
+
+It is read-only, changes nothing, and prints what it finds about the USB
+device, the ALSA card, the PipeWire nodes, the idle-suspend override, any host
+DSP stage attached to your apps, and stale default devices. Most problems are
+identified by it.
+
+## Quick triage
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| No sound at all, no sink in `wpctl status` | the ALSA card failed to register | `sudo /usr/lib/gsp670/gsp670-audio-guard.sh` |
+| Only one mono device, no "Game" | kernel older than 5.14.15 | upgrade the kernel |
+| Voice is delayed by ~1.4 s | the dongle's firmware latency bug | use the wired USB-C connection |
+| Discord says "no audio input detected" | idle-suspend churn, or chat routed through a DSP sink | install the WirePlumber drop-in; keep chat on the hardware nodes |
+| Starting one app's audio stops another's | same as above | same as above |
+| `gsp670` says "device not found" | udev rules missing, or user not in the `audio` group | `ls /etc/udev/rules.d/99-gsp670.rules`; `groups \| grep audio` |
+| `PermissionError: /dev/hidraw*` | udev rules missing or not reloaded | `sudo udevadm control --reload-rules && sudo udevadm trigger` |
+| Battery percentage missing | the device does not report it | nothing — see [limitations.md](limitations.md) §2 |
 
 ## Table of Contents
 
@@ -8,7 +30,7 @@ This guide covers common issues encountered when using the GSP 670 Python librar
 2. [Permission Problems](#permission-problems)
 3. [Audio Not Working](#audio-not-working)
 4. [Communication Errors](#communication-errors)
-5. [dongle Mode Issues](#dongle-mode-issues)
+5. [Dongle Mode Issues](#dongle-mode-issues)
 6. [Wired Mode Issues](#wired-mode-issues)
 7. [Discord / Voice Chat](#discord--voice-chat)
 

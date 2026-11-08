@@ -6,7 +6,8 @@
 PREFIX      ?= /usr
 DESTDIR     ?=
 LIBDIR      ?= $(PREFIX)/lib/gsp670
-PYTHON      ?= python3
+# Prefer a local virtualenv if one exists, so `make test` works out of the box.
+PYTHON      ?= $(shell test -x .venv/bin/python && echo .venv/bin/python || echo python3)
 PIP         ?= $(PYTHON) -m pip
 INSTALL     ?= install
 
@@ -64,10 +65,19 @@ install-config:
 		$(DESTDIR)$(PIPEWIRE_DIR)/50-gsp670-surround.conf
 
 install-python:
-	$(PIP) install .
+	@# Modern distributions mark the system Python as externally managed
+	@# (PEP 668), so a plain `pip install .` fails. Try the usual escapes.
+	@$(PIP) install . || \
+	  $(PIP) install --break-system-packages . || \
+	  $(PIP) install --user --break-system-packages . || \
+	  { echo "pip install failed; try: pipx install ."; exit 1; }
 
 test:
-	$(PYTHON) -m pytest tests/ -q
+	@$(PYTHON) -c 'import pytest' 2>/dev/null || { \
+		echo "pytest not found. Install the dev dependencies:"; \
+		echo "  python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"; \
+		exit 1; }
+	@$(PYTHON) -m pytest tests/ -q
 
 lint:
 	@command -v ruff >/dev/null 2>&1 \
