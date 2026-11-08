@@ -43,7 +43,6 @@ WITH_DBUS=0
 UNINSTALL=0
 PREFIX="/usr"
 LIBDIR="/usr/lib/gsp670"
-SYSCONFDIR="/etc"
 
 usage() {
     sed -n '2,/^set -u/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//; $d'
@@ -65,7 +64,6 @@ done
 
 if [ "$USER_SCOPE" -eq 1 ]; then
     LIBDIR="$HOME/.local/lib/gsp670"
-    SYSCONFDIR="$HOME/.config"
 fi
 
 # --- Output helpers ----------------------------------------------------------
@@ -259,10 +257,8 @@ do_install() {
         # in the user's session: root has no user D-Bus session.
         if command -v systemctl >/dev/null 2>&1; then
             local wp_user=""
-            local wp_home=""
             if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
                 wp_user="$SUDO_USER"
-                wp_home="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
             fi
             if [ -n "$wp_user" ]; then
                 if run sudo -u "$wp_user" -H \
@@ -411,21 +407,26 @@ install_python() {
         as_user=(sudo -u "$run_as_user" -H)
     fi
 
+    # $pip_cmd may be a multi-word command ("python3 -m pip"), so split it
+    # into an array and expand it unquoted.
+    local pip=()
+    read -r -a pip <<< "$pip_cmd"
+
     # Modern distributions mark the system Python as "externally managed"
     # (PEP 668), which makes a plain `pip install` fail. Try the usual
     # escape hatches in order of preference.
-    if "${as_user[@]}" $pip_cmd install --user "$REPO_ROOT" 2>/dev/null; then
+    if "${as_user[@]}" "${pip[@]}" install --user "$REPO_ROOT" 2>/dev/null; then
         ok "installed the gsp670 package (user site)"
         note_user_path "$run_as_home"
         return 0
     fi
-    if "${as_user[@]}" $pip_cmd install --user --break-system-packages \
+    if "${as_user[@]}" "${pip[@]}" install --user --break-system-packages \
         "$REPO_ROOT" 2>/dev/null; then
         ok "installed the gsp670 package (user site, PEP 668 override)"
         note_user_path "$run_as_home"
         return 0
     fi
-    if "${as_user[@]}" $pip_cmd install "$REPO_ROOT" 2>/dev/null; then
+    if "${as_user[@]}" "${pip[@]}" install "$REPO_ROOT" 2>/dev/null; then
         ok "installed the gsp670 package (system)"
         return 0
     fi

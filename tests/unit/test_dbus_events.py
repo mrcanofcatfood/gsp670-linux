@@ -9,10 +9,14 @@ methods are overridden to record emissions.
 
 import unittest
 
-import dbus
-import dbus.mainloop.glib
+import pytest
 
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+# The D-Bus stack is an optional extra. Skip the whole module when it is not
+# installed, rather than failing at collection time.
+dbus = pytest.importorskip("dbus")
+dbus_mainloop_glib = pytest.importorskip("dbus.mainloop.glib")
+
+dbus_mainloop_glib.DBusGMainLoop(set_as_default=True)
 
 from gsp670.dbus_service import Gsp670DBusService
 from gsp670.device import GSA70Device

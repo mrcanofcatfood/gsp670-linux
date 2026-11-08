@@ -103,7 +103,8 @@ test_hid_discovery() {
     print_test "HID Device Discovery"
     
     # Try to find dongle
-    local dongle_path=$(python3 -c "
+    local dongle_path
+    dongle_path=$(python3 -c "
 import sys
 sys.path.insert(0, 'src')
 try:
@@ -126,7 +127,8 @@ except Exception as e:
     fi
     
     # Try to find headset (wired mode)
-    local headset_path=$(python3 -c "
+    local headset_path
+    headset_path=$(python3 -c "
 import sys
 sys.path.insert(0, 'src')
 try:
@@ -153,7 +155,9 @@ except Exception as e:
 test_device_communication() {
     print_test "Device Communication"
     
-    local result=$(python3 -c "
+    local result
+    
+    result=$(python3 -c "
 import sys
 sys.path.insert(0, 'src')
 try:
@@ -186,7 +190,9 @@ except Exception as e:
 test_protocol_opcodes() {
     print_test "Protocol Opcodes"
     
-    local result=$(python3 -c "
+    local result
+    
+    result=$(python3 -c "
 import sys
 sys.path.insert(0, 'src')
 try:
@@ -244,19 +250,22 @@ test_audio_devices() {
     print_test "Audio Device Detection"
     
     # Check aplay
-    local aplay_output=$(aplay -l 2>&1)
+    local aplay_output
+    aplay_output=$(aplay -l 2>&1)
     if echo "$aplay_output" | grep -qi "G670\|USB Audio"; then
         pass "GSP 670 playback device found"
         
         # Get card number
-        local card=$(echo "$aplay_output" | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
+        local card
+        card=$(echo "$aplay_output" | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
         info "Playback card number: $card"
     else
         fail "GSP 670 playback device not found"
     fi
     
     # Check arecord
-    local arecord_output=$(arecord -l 2>&1)
+    local arecord_output
+    arecord_output=$(arecord -l 2>&1)
     if echo "$arecord_output" | grep -qi "G670\|USB Audio"; then
         pass "GSP 670 capture device found"
     else
@@ -269,7 +278,8 @@ test_audio_playback() {
     print_test "Audio Playback"
     
     # Get card number
-    local card=$(aplay -l 2>&1 | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
+    local card
+    card=$(aplay -l 2>&1 | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
     
     if [[ -z "$card" ]]; then
         skip "No audio device to test"
@@ -277,7 +287,8 @@ test_audio_playback() {
     fi
     
     # Generate a short sine wave
-    local tmpfile=$(mktemp /tmp/gsp670_test_XXXXXX.wav)
+    local tmpfile
+    tmpfile=$(mktemp /tmp/gsp670_test_XXXXXX.wav)
     
     # Create a small WAV file with a sine wave
     python3 -c "
@@ -329,18 +340,22 @@ test_audio_capture() {
     print_test "Audio Capture"
     
     # Get card number
-    local card=$(arecord -l 2>&1 | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
+    local card
+    card=$(arecord -l 2>&1 | grep -i "G670\|USB Audio" | head -1 | sed -n 's/.*card \([0-9]*\).*/\1/p')
     
     if [[ -z "$card" ]]; then
         skip "No capture device to test"
         return
     fi
     
-    local tmpfile=$(mktemp /tmp/gsp670_capture_XXXXXX.raw)
+    local tmpfile
+    
+    tmpfile=$(mktemp /tmp/gsp670_capture_XXXXXX.raw)
     
     # Record a short sample
     if timeout 2 arecord -D "hw:$card,0" -c 1 -r 48000 -f S16_LE -t raw "$tmpfile" 2>&1; then
-        local size=$(stat -c%s "$tmpfile" 2>/dev/null || stat -f%z "$tmpfile" 2>/dev/null || echo "0")
+        local size
+        size=$(stat -c%s "$tmpfile" 2>/dev/null || stat -f%z "$tmpfile" 2>/dev/null || echo "0")
         if [[ "$size" -gt 1000 ]]; then
             pass "Audio capture successful ($size bytes)"
         else
@@ -360,7 +375,9 @@ test_hid_events() {
     info "Starting 3-second HID event monitoring..."
     info "Please interact with the headset (press buttons, adjust volume)"
     
-    local events=$(python3 -c "
+    local events
+    
+    events=$(python3 -c "
 import sys
 import time
 sys.path.insert(0, 'src')
@@ -393,7 +410,9 @@ except Exception as e:
 print_summary() {
     print_header "Test Summary"
     
-    local total=$((PASSED + FAILED + SKIPPED))
+    local total
+    
+    total=$((PASSED + FAILED + SKIPPED))
     
     echo -e "Total tests: $total"
     echo -e "${GREEN}Passed:  $PASSED${NC}"

@@ -27,10 +27,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev]'
-          # The D-Bus daemon is an optional extra, but its unit tests need the
-          # libraries present.
+
+      - name: Install the optional D-Bus stack
+        # dbus-python needs the system development headers to build. When they
+        # are unavailable the D-Bus tests skip themselves rather than failing.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libdbus-1-dev libglib2.0-dev pkg-config
           python -m pip install dbus-python PyGObject || \
-            echo "note: dbus tests will be skipped"
+            echo "note: the D-Bus stack is unavailable; its tests will skip"
 
       - name: Run the test suite
         run: python -m pytest tests/unit tests/integration -q
@@ -57,7 +62,9 @@ jobs:
             scripts/gsp670-audio-guard.sh \
             scripts/gsp670-audio-doctor.sh \
             scripts/setup-virtual-surround.sh \
-            scripts/check-provenance.sh
+            scripts/check-provenance.sh \
+            scripts/hardware-test.sh \
+            scripts/run-hw-tests.sh
 
   provenance:
     # Required check. This repository publishes the hardware interface only;

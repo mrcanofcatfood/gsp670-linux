@@ -131,7 +131,7 @@ done
 # --- Rules 3-6: content patterns in text files ------------------------------
 # Only inspect files that are plausibly text.
 check_content() {
-    local path="$1" regex="$2" rule="$3" detail="$4" ext="$5"
+    local path="$1" regex="$2" rule="$3" detail="$4"
 
     [ -f "$path" ] || return 0
     case "$path" in
@@ -159,7 +159,7 @@ check_content() {
 #   0x00xxxxxx is the shape of an address inside a 32-bit PE image.
 for f in "${TRACKED[@]}"; do
     check_content "$f" '0x00[0-9a-f]{6}\b' "vendor code address" \
-        "Remove the address, or describe the behaviour in high-level terms instead." ""
+        "Remove the address, or describe the behaviour in high-level terms instead."
 done
 
 # Rule 4: internal symbol names from the vendor's analysis output.
@@ -167,7 +167,7 @@ done
 #   \bFUN_ does not match. A plain substring match is used instead.
 for f in "${TRACKED[@]}"; do
     check_content "$f" 'FUN_[0-9a-f]{6}' "internal symbol name" \
-        "Remove the symbol name; it describes the vendor's implementation, not the interface." ""
+        "Remove the symbol name; it describes the vendor's implementation, not the interface."
 done
 
 # Rule 5: disassembly listings.
@@ -179,13 +179,13 @@ for f in "${TRACKED[@]}"; do
         *) continue ;;
     esac
     check_content "$f" '^[[:space:]]*0x[0-9a-f]{6,8}[[:space:]]+[a-z]{2,7}' "disassembly listing" \
-        "Remove the disassembly; it reproduces the vendor's implementation." ""
+        "Remove the disassembly; it reproduces the vendor's implementation."
 done
 
 # Rule 6: names of the vendor's proprietary executables.
 for f in "${TRACKED[@]}"; do
     check_content "$f" 'EPOSGamingSuite' "vendor executable name" \
-        "Refer to it by product name only, or remove the reference." ""
+        "Refer to it by product name only, or remove the reference."
 done
 
 # Rule 7: internal method and class names from the vendor's implementation.
@@ -201,18 +201,18 @@ VENDOR_LIBS='CxAudioHid[A-Za-z]*|HidDfu[A-Za-z]*'
 
 for f in "${TRACKED[@]}"; do
     check_content "$f" "($VENDOR_METHODS)" "vendor method name" \
-        "Remove the vendor's internal method name; describe the behaviour instead." ""
+        "Remove the vendor's internal method name; describe the behaviour instead."
     check_content "$f" "($VENDOR_CLASSES)" "vendor class name" \
-        "Remove the vendor's internal class name; it describes their implementation." ""
+        "Remove the vendor's internal class name; it describes their implementation."
     check_content "$f" "($VENDOR_LIBS)" "vendor library name" \
-        "Remove the vendor's internal library name." ""
+        "Remove the vendor's internal library name."
 done
 
 # --- Rule 8: licence-key and private-key artefacts --------------------------
 KEY_RE='-----BEGIN [A-Z ]*PRIVATE KEY-----|(licen[cs]e|activation|serial)[_-]?key'
 for f in "${TRACKED[@]}"; do
     check_content "$f" "$KEY_RE" "key artefact" \
-        "Licence or activation key material must never be committed." ""
+        "Licence or activation key material must never be committed."
 done
 
 # --- Result ------------------------------------------------------------------
