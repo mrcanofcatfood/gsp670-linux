@@ -583,7 +583,7 @@ def _request_bus_name(bus: dbus.Bus) -> bool:
     primary_owner = getattr(
         getattr(dbus, "request_name_reply", None),
         "primary_owner",
-        dbus.bus.REQUEST_NAME_REPLY_PRIMARY_OWNER,
+        dbus.bus.REQUEST_NAME_REPLY_PRIMARY_mrcanofcatfood,
     )
 
     try:

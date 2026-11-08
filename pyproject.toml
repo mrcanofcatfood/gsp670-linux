@@ -49,10 +49,10 @@ dev = [
 gsp670 = "gsp670.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/OWNER/gsp670-linux"
-Documentation = "https://github.com/OWNER/gsp670-linux#readme"
-Repository = "https://github.com/OWNER/gsp670-linux.git"
-Issues = "https://github.com/OWNER/gsp670-linux/issues"
+Homepage = "https://github.com/mrcanofcatfood/gsp670-linux"
+Documentation = "https://github.com/mrcanofcatfood/gsp670-linux#readme"
+Repository = "https://github.com/mrcanofcatfood/gsp670-linux.git"
+Issues = "https://github.com/mrcanofcatfood/gsp670-linux/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

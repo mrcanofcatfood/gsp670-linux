@@ -6,7 +6,7 @@ Release:        1%{?dist}
 Summary:        Linux support for the EPOS|Sennheiser GSP 670 headset and GSA 70 dongle
 
 License:        MIT
-URL:            https://github.com/OWNER/gsp670-linux
+URL:            https://github.com/mrcanofcatfood/gsp670-linux
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch

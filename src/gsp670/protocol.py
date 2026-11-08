@@ -117,38 +117,37 @@ class SecomOpcode(IntEnum):
     :func:`secom_value`. The reply class field (bytes 7..9) is not a strict
     echo: 0x0000 plain data, 0x0004 device-event/sub-device, req>>2 ACKs.
     """
-    GET_FW_VERSION = 0x00            # -> parseSwVersion
-    GET_SERIAL_NO = 0x01             # -> parseGetSerialNumber
-    GET_DEVICE_NAME = 0x02           # -> parseDeviceName ("EPOS GSA 70")
-    GET_DEVICE_ADDRESS = 0x03        # -> parseBDAddr (Bluetooth address)
-    GET_SUBDEVICES_CONNECTED = 0x04  # -> parsesubDevicesConnected
+    GET_FW_VERSION = 0x00
+    GET_SERIAL_NO = 0x01
+    GET_DEVICE_NAME = 0x02           # -> "EPOS GSA 70"
+    GET_DEVICE_ADDRESS = 0x03        # -> Bluetooth address
+    GET_SUBDEVICES_CONNECTED = 0x04
     # 0x05 unknown
-    GET_DFU_TYPE = 0x06              # -> parseDfuType
-    ENTER_DFU = 0x07                 # -> parseEnterDfu
+    GET_DFU_TYPE = 0x06
+    ENTER_DFU = 0x07
     # 0x08 / 0x0b / 0x0d / 0x0f -> "Opcode not supported"
     # 0x09 unknown
     # 0x0a unknown
-    GET_NESTED_DEVICE_BT_NAME = 0x0C  # -> parseDeviceBtName
-    GET_BATTERY_PERCENTAGE = 0x0E     # -> GetBatPercentage
-    GET_SIDETONE = 0x10               # -> GetSideToneGain
+    GET_NESTED_DEVICE_BT_NAME = 0x0C
+    GET_BATTERY_PERCENTAGE = 0x0E
+    GET_SIDETONE = 0x10
     SET_SIDETONE = 0x11               # value byte appended
     SET_NOISE_REDUCTION = 0x12        # value byte appended
-    GET_NOISE_REDUCTION = 0x13        # -> GetNoiseReductionLevel
-    GET_NESTED_DEVICE_PID = 0x14      # -> parsePIDNumber
+    GET_NOISE_REDUCTION = 0x13
+    GET_NESTED_DEVICE_PID = 0x14
     # 0x15 unknown
     SEND_LATENCY = 0x16               # value byte appended
-    GET_LATENCY = 0x17                # -> GetLatencyLevel
-    GET_REMOTE_DEVICE_INFO = 0x18     # value byte appended -> GetRemoteDeviceInfo
-    GET_NBR_LINK_KEYS = 0x19          # -> GetNbrLinkKeys
+    GET_LATENCY = 0x17
+    GET_REMOTE_DEVICE_INFO = 0x18     # value byte appended
+    GET_NBR_LINK_KEYS = 0x19
     SET_AUTO_POWER_OFF = 0x1A         # value byte appended
     GET_AUTO_POWER_OFF = 0x1B
     # 0x1C unknown
 
 
-#: Request payload for each SECOM opcode, exactly as recovered from
-#: ``CCapricornDatagram::getHIDBuffers``. Opcodes listed in
-#: ``SECOM_VALUE_OPCODES`` append one value byte (stored as a u16 LE, i.e.
-#: ``<value> 00``) and therefore use a length of 6.
+#: Request payload for each SECOM opcode. These are fixed per-opcode values.
+#: Opcodes listed in ``SECOM_VALUE_OPCODES`` append one value byte (stored as
+#: a u16 LE, i.e. ``<value> 00``) and therefore use a length of 6.
 SECOM_REQUEST_PAYLOAD = {
     0x00: bytes.fromhex('01000300'),
     0x01: bytes.fromhex('01000b00'),

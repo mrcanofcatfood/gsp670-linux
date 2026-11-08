@@ -12,7 +12,7 @@ Get the EPOS|Sennheiser GSP 670 headset working on Linux.
 ## Step 1: Install
 
 ```bash
-git clone https://github.com/OWNER/gsp670-linux
+git clone https://github.com/mrcanofcatfood/gsp670-linux
 cd gsp670-linux
 sudo ./scripts/install.sh
 ```

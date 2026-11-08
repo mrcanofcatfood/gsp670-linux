@@ -23,7 +23,7 @@ independent game and chat volume, like the vendor's Windows software does.
 ## Quick start
 
 ```bash
-git clone https://github.com/OWNER/gsp670-linux
+git clone https://github.com/mrcanofcatfood/gsp670-linux
 cd gsp670-linux
 sudo ./scripts/install.sh
 ```
@@ -209,18 +209,17 @@ python3 -m venv .venv
 The unit and integration tests need no hardware. The tests under
 `tests/hardware/` need a physically connected device.
 
-### Before publishing
-
-The repository URL is a placeholder. Replace `OWNER` with your GitHub
-username in these files:
+There is also a provenance check that enforces the publication boundary
+described in [docs/legal.md](docs/legal.md):
 
 ```bash
-grep -rl OWNER --exclude-dir=.venv --exclude-dir=.git . \
-  | xargs sed -i 's|OWNER|<your-username>|g'
+make check-provenance
 ```
 
-That covers `pyproject.toml`, `README.md`, the systemd units, the packaging
-rules in `rules.d/`, and the docs.
+It fails on vendor binaries, oversized files, vendor code addresses, internal
+symbol and method names, disassembly listings, and key artefacts. It runs as a
+required CI check.
+
 
 ## Uninstall
 

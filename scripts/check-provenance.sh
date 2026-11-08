@@ -188,7 +188,27 @@ for f in "${TRACKED[@]}"; do
         "Refer to it by product name only, or remove the reference." ""
 done
 
-# --- Rule 7: licence-key and private-key artefacts --------------------------
+# Rule 7: internal method and class names from the vendor's implementation.
+#
+# These are the names of functions and types inside the vendor's closed-source
+# software. They describe the implementation, not the interface, so they must
+# not be published. The pattern is an explicit list rather than a general
+# heuristic, because the project has its own similarly-shaped API names
+# (parse_event_payload, parse_frame_event, ...) that must remain allowed.
+VENDOR_METHODS='parseSwVersion|parseGetSerialNumber|parseDeviceName|parseBDAddr|parseDfuType|parseEnterDfu|parsesubDevicesConnected|parseDeviceBtName|parsePIDNumber|GetBatPercentage|GetAutoPowerOffTimerStatus|SetAutoPowerOffTimerStatus|GetSideToneGain|GetNoiseReductionLevel|GetLatencyLevel|GetNbrLinkKeys|GetRemoteDeviceInfo|setNoiseReduction|setSideToneValue|SendLatencyCommand'
+VENDOR_CLASSES='CCapricornDatagram|CSecomParserAdapter|QtilSecomParser|ModiBaseStationDevice|ModiHeadsetDevice|hModiHeadsetDevice|ModiFirmwareUpdater|ModiUpdater'
+VENDOR_LIBS='CxAudioHid[A-Za-z]*|HidDfu[A-Za-z]*'
+
+for f in "${TRACKED[@]}"; do
+    check_content "$f" "($VENDOR_METHODS)" "vendor method name" \
+        "Remove the vendor's internal method name; describe the behaviour instead." ""
+    check_content "$f" "($VENDOR_CLASSES)" "vendor class name" \
+        "Remove the vendor's internal class name; it describes their implementation." ""
+    check_content "$f" "($VENDOR_LIBS)" "vendor library name" \
+        "Remove the vendor's internal library name." ""
+done
+
+# --- Rule 8: licence-key and private-key artefacts --------------------------
 KEY_RE='-----BEGIN [A-Z ]*PRIVATE KEY-----|(licen[cs]e|activation|serial)[_-]?key'
 for f in "${TRACKED[@]}"; do
     check_content "$f" "$KEY_RE" "key artefact" \

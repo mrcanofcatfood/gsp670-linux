@@ -28,8 +28,16 @@ scripts/check-provenance.sh|FUN_[0-9a-f]{6}
 scripts/check-provenance.sh|EPOSGamingSuite
 scripts/check-provenance.sh|-----BEGIN [A-Z ]*PRIVATE KEY-----
 scripts/check-provenance.sh|(licen[cs]e|activation|serial)[_-]?key
+scripts/check-provenance.sh|parseSwVersion
+scripts/check-provenance.sh|GetBatPercentage
+scripts/check-provenance.sh|CCapricornDatagram
+scripts/check-provenance.sh|CxAudioHid
 scripts/provenance-allowlist.txt|0x00[0-9a-f]{6}
 scripts/provenance-allowlist.txt|FUN_[0-9a-f]{6}
 scripts/provenance-allowlist.txt|EPOSGamingSuite
 scripts/provenance-allowlist.txt|-----BEGIN [A-Z ]*PRIVATE KEY-----
 scripts/provenance-allowlist.txt|(licen[cs]e|activation|serial)[_-]?key
+scripts/provenance-allowlist.txt|parseSwVersion
+scripts/provenance-allowlist.txt|GetBatPercentage
+scripts/provenance-allowlist.txt|CCapricornDatagram
+scripts/provenance-allowlist.txt|CxAudioHid

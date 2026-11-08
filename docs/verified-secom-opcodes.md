@@ -68,36 +68,36 @@ Notes:
 
 ## 3. Opcode table
 
-Request payloads below are exactly the bytes produced by
-`CCapricornDatagram::getHIDBuffers`. Writable opcodes (`0x11`, `0x12`,
-`0x16`, `0x18`, `0x1A`) append `<value> 00` and use a length of 6.
+Request payloads below are the fixed per-opcode values the device expects.
+Writable opcodes (`0x11`, `0x12`, `0x16`, `0x18`, `0x1A`) append
+`<value> 00` and use a length of 6.
 
 | Opcode | Name | Request payload | Reply (live) |
 |--------|------|-----------------|--------------|
-| `0x00` | Get firmware version (`parseSwVersion`) | `01 00 03 00` | data: `… 03 00 0e 00 02 00` → `3.14.2` |
-| `0x01` | Get serial number (`parseGetSerialNumber`) | `01 00 0b 00` | data: 36-byte NUL-padded ASCII |
-| `0x02` | Get device name (`parseDeviceName`) | `09 00 01 00` | data: UTF-16LE `"EPOS GSA 70"` |
-| `0x03` | Get device address (`parseBDAddr`) | `06 00 14 00` | data: `4e 00 f2 e2 94 00 16 00` |
-| `0x04` | Sub-devices connected (`parsesubDevicesConnected`) | `01 00 09 00` | sub-dev reply `04 00 04 00`: echo + `00 00` (0 devices) |
+| `0x00` | Get firmware version | `01 00 03 00` | data: `… 03 00 0e 00 02 00` → `3.14.2` |
+| `0x01` | Get serial number | `01 00 0b 00` | data: 36-byte NUL-padded ASCII |
+| `0x02` | Get device name | `09 00 01 00` | data: UTF-16LE `"EPOS GSA 70"` |
+| `0x03` | Get device address | `06 00 14 00` | data: `4e 00 f2 e2 94 00 16 00` |
+| `0x04` | Sub-devices connected | `01 00 09 00` | sub-dev reply `04 00 04 00`: echo + `00 00` (0 devices) |
 | `0x05` | *(unknown)* | `01 00 0a 00` | sub-dev reply `04 00 04 00`: echo only |
-| `0x06` | Get DFU type (`parseDfuType`) | `01 00 0d 00` | data on device mode |
-| `0x07` | Enter DFU (`parseEnterDfu`) | `01 00 06 00` | data on device mode |
+| `0x06` | Get DFU type | `01 00 0d 00` | data on device mode |
+| `0x07` | Enter DFU | `01 00 06 00` | data on device mode |
 | `0x09` | *(unknown)* | `06 00 09 00` + 10×`00` | ACK (`05 30 02 00` = req>>2) |
 | `0x0A` | *(unknown)* | `06 00 13 00` | ACK (`05 30 02 00` = req>>2) |
-| `0x0C` | Nested device BT name (`parseDeviceBtName`) | `06 00 27 00` | ACK (needs headset) |
-| `0x0E` | Battery percentage (`GetBatPercentage`) | `12 00 03 00` | ACK (needs headset; reply would be `12 00 03 00 <b> 00`) |
-| `0x10` | **Get sidetone** (`GetSideToneGain`) | `0a 00 0c 00` | ACK (needs headset) |
-| `0x11` | **Set sidetone** (`setSideToneValue`) | `0a 00 0b 00 <v> 00` | ACK |
-| `0x12` | **Set noise reduction** (`setNoiseReduction`) | `0a 00 11 00 <v> 00` | ACK |
-| `0x13` | **Get noise reduction** (`GetNoiseReductionLevel`) | `0a 00 12 00` | ACK (needs headset) |
-| `0x14` | Nested device PID (`parsePIDNumber`) | `01 00 14 00` | ACK (needs headset) |
+| `0x0C` | Nested device BT name | `06 00 27 00` | ACK (needs headset) |
+| `0x0E` | Battery percentage | `12 00 03 00` | ACK (needs headset; reply would be `12 00 03 00 <b> 00`) |
+| `0x10` | **Get sidetone** | `0a 00 0c 00` | ACK (needs headset) |
+| `0x11` | **Set sidetone** | `0a 00 0b 00 <v> 00` | ACK |
+| `0x12` | **Set noise reduction** | `0a 00 11 00 <v> 00` | ACK |
+| `0x13` | **Get noise reduction** | `0a 00 12 00` | ACK (needs headset) |
+| `0x14` | Nested device PID | `01 00 14 00` | ACK (needs headset) |
 | `0x15` | *(unknown)* | `08 00 f0 00` | ACK |
-| `0x16` | **Send latency** (`SendLatencyCommand`) | `0a 00 16 00 <v> 00` | ACK |
-| `0x17` | **Get latency** (`GetLatencyLevel`) | `0a 00 17 00` | ACK (needs headset) |
-| `0x18` | Remote device info (`GetRemoteDeviceInfo`) | `06 00 32 00 <v> 00` | ACK (needs headset) |
-| `0x19` | Number of link keys (`GetNbrLinkKeys`) | `06 00 11 00` | ACK |
-| `0x1A` | **Set auto power off** (`SetAutoPowerOffTimerStatus`) | `01 00 1f 00 <v> 00` | ACK |
-| `0x1B` | **Get auto power off** (`GetAutoPowerOffTimerStatus`) | `01 00 20 00` | ACK |
+| `0x16` | **Send latency** | `0a 00 16 00 <v> 00` | ACK |
+| `0x17` | **Get latency** | `0a 00 17 00` | ACK (needs headset) |
+| `0x18` | Remote device info | `06 00 32 00 <v> 00` | ACK (needs headset) |
+| `0x19` | Number of link keys | `06 00 11 00` | ACK |
+| `0x1A` | **Set auto power off** | `01 00 1f 00 <v> 00` | ACK |
+| `0x1B` | **Get auto power off** | `01 00 20 00` | ACK |
 | `0x1C` | *(unknown)* | `06 00 1c 00` | ACK |
 
 `<v>` is a single byte (the service parses it with `strtol(…, 10)` and writes
@@ -312,8 +312,8 @@ AUTOPOWER  0x1b req=01002000 -> ACK
 A targeted test ruled out a merely *slow* reply: sending `0x0e` and then
 listening passively for **15 s** produced only the link ACK
 (`05 30` op `0x0003`, payload `12 00 03 00`) and nothing else. Combined with
-`getHIDBuffers` (§4) showing the request is byte-identical to the official
-service's, the dongle genuinely does not answer `0x0e` in this state.
+§4 showing the request is byte-identical to the one the vendor's own
+application sends, the dongle genuinely does not answer `0x0e` in this state.
 
 **GAP-RE-1b hardware verdict (2026-10-13, controlled ± confirmed link):**
 the earlier silent listens above were all ambiguous because the RF link was
@@ -372,7 +372,7 @@ frame(SecomOpcode.SET_SIDETONE, secom_request(SecomOpcode.SET_SIDETONE, 5))
 * The device-address blob (`4e 00 f2 e2 94 00 16 00`) is opaque.
 * The value range/meaning of sidetone / noise-reduction / latency values
   needs a linked headset to confirm (the byte is 1-wide on the wire).
-* `0x18` (`GetRemoteDeviceInfo`) also takes a value byte — confirm the
+* `0x18` also takes a value byte — confirm the
   selector meaning with a linked headset.
 * **Why do the value GETs (`0x0e`, `0x10`, `0x13`, `0x17`, `0x1b`) only
   link-ACK even while device events (§5.2) are arriving?** **Resolved:** the

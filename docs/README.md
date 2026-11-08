@@ -58,7 +58,7 @@ Run the doctor first — it is read-only and usually identifies the problem:
 ./scripts/gsp670-audio-doctor.sh
 ```
 
-Report bugs at <https://github.com/OWNER/gsp670-linux/issues>.
+Report bugs at <https://github.com/mrcanofcatfood/gsp670-linux/issues>.
 
 This is an independent project and is not affiliated with EPOS or
 Sennheiser.

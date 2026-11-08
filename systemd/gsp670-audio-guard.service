@@ -1,6 +1,6 @@
 [Unit]
 Description=Ensure EPOS GSA 70 USB-audio card is registered
-Documentation=https://github.com/OWNER/gsp670-linux
+Documentation=https://github.com/mrcanofcatfood/gsp670-linux
 After=sound.target
 # Triggered by udev (see udev/99-gsp670-audio.rules) when the dongle
 # (re-)enumerates, and started once at boot as a fallback.

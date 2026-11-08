@@ -1,6 +1,6 @@
 [Unit]
 Description=GSP 670 Device Event Monitor
-Documentation=https://github.com/OWNER/gsp670-linux
+Documentation=https://github.com/mrcanofcatfood/gsp670-linux
 After=local-fs.target
 Wants=systemd-udev-settle.service
 
