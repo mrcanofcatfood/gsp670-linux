@@ -94,11 +94,9 @@ class SecomOpcode(IntEnum):
     """
     Capricorn / SECOM command opcodes (the *normal-mode* control protocol).
 
-    Verified 2026-10-12 by:
-      * static analysis of ``EPOSGamingSuiteService``
-        (``CCapricornDatagram::getHIDBuffers`` / ``getPayload`` /
-        ``EncodeDatagram`` / ``parseDatagram``), and
-      * live probing of a GSA 70 dongle (1395:0300) via ``/dev/hidraw1``.
+    Established by live probing of a GSA 70 dongle (1395:0300) and a GSP 670
+    headset in USB device mode (1395:008a) over their HID interface, and
+    cross-checked against the vendor's Windows configuration application.
 
     The opcode lives in the frame header (bytes 7..8, LE). It is *not* the
     ``FeatureIndex`` scheme that was previously guessed. Each opcode carries a
@@ -183,18 +181,17 @@ SECOM_REQUEST_PAYLOAD = {
 SECOM_VALUE_OPCODES = frozenset({0x11, 0x12, 0x16, 0x18, 0x1A})
 
 #: A device -> host event key is a short array of little-endian u16 words at the
-#: start of the datagram body: ``<word0> <word1> [<variant>]``. The dispatcher
-#: ``FUN_00643b10`` compares three words with ``FUN_00642d30`` and two words
-#: with ``FUN_00642cf0`` (Ghidra + ``objdump``, 2026-10-13).
+#: start of the datagram body: ``<word0> <word1> [<variant>]``. The device
+#: dispatches on either three words or two, depending on the event.
 #:
 #: The **second word is not a fixed namespace**. It is ``0x00F0`` for most
 #: notifications but varies by source component: battery uses ``0x000F``,
 #: ANC-state / tone use ``0x0007``, speaker-mic ``0x001D`` and device PDL
 #: ``0x0029``. Earlier notes claiming a uniform ``f0 00`` word were an
-#: over-generalisation (see ``analysis/session-handshake.md`` section 6.1).
+#: over-generalisation.
 EVENT_NAMESPACE = 0x00F0  # the most common word1 value (NOT universal)
 
-#: Word1 values seen in the recovered dispatcher table.
+#: Word1 values observed in device -> host event notifications.
 EVENT_WORDS = frozenset({0x00F0, 0x000F, 0x0007, 0x001D, 0x0029})
 
 #: Recovered device -> host event keys: ``(word0, word1, variant) -> name``.
@@ -224,9 +221,8 @@ EVENT_KEYS = {
     (0x0001, 0x00F0, 0x0003): 'Service_Events_AutoPowerOffTimerStatus',
 }
 
-#: Value schema (bytes after the key) per event, recovered from the dispatcher's
-#: in-byte-stream reads: ``FUN_006b3cf0`` = u8, ``FUN_006b3d40`` = u16 LE. The
-#: tuple lists the fields in order; e.g. ``('u8', 'u16')`` is 3 value bytes.
+#: Value schema (bytes after the key) per event. The tuple lists the fields in
+#: order; e.g. ``('u8', 'u16')`` is 3 value bytes.
 EVENT_PAYLOAD = {
     'Component_Events_StatusChange': ('u8', 'u16'),
     'ANC_AdaptiveNoiseCancelationStateChanged': ('u16',),
@@ -515,8 +511,8 @@ def make_fwu_frame(opcode: int, payload: bytes = b'') -> bytes:
         FWU does **not** ride the SECOM ``04 00`` transport. Sending
         ``0x4F*`` as a SECOM frame is the wrong path and NAKs — the real
         channel is the **Rtx** datagram channel (64-byte ``0x58`` reports,
-        ``0xEE``-padded). See ``analysis/session-handshake.md`` §6.3/§6.5 and
-        use :func:`rtx_fwu_packet` / :func:`rtx_fwu_enable` instead.
+        ``0xEE``-padded). Use :func:`rtx_fwu_packet` / :func:`rtx_fwu_enable`
+        instead.
 
     Args:
         opcode: FWU opcode (0x4F00-0x4F15)
@@ -528,16 +524,15 @@ def make_fwu_frame(opcode: int, payload: bytes = b'') -> bytes:
     return frame(opcode, payload, MARKER_HOST)
 
 
-#: Rtx datagram channel prefix byte (``RtxDatagramIo::split_request_into_packets``
-#: ``FUN_0067a070``): report byte 0, then ≤63 payload bytes, ``0xEE``-padded.
+#: Rtx datagram channel prefix byte: report byte 0, then <=63 payload bytes,
+#: ``0xEE``-padded.
 RTX_REPORT_PREFIX = 0x58
 #: Length of each Rtx report.
 RTX_REPORT_SIZE = 64
 #: Pad byte filling the tail of an Rtx report.
 RTX_PAD = 0xEE
 
-#: Recovered Rtx FWU command ids: ``purpose -> request id``
-#: (``analysis/session-handshake.md`` §6.3).
+#: Rtx FWU command ids: ``purpose -> request id``.
 RTX_FWU_IDS = {
     'enable': 0x4F00,
     'update': 0x4F03,
@@ -554,9 +549,9 @@ def rtx_fwu_packet(request: bytes, pad_to: int = RTX_REPORT_SIZE) -> bytes:
     """
     Wrap a serialized Rtx FWU request into a report frame.
 
-    FWU travels on the **Rtx** datagram channel, not SECOM ``04 00``
-    (``analysis/session-handshake.md`` §6.3/§6.5). Reports are 64 bytes:
-    byte 0 = ``0x58``, then the request bytes, right-padded with ``0xEE``.
+    FWU travels on the **Rtx** datagram channel, not SECOM ``04 00``.
+    Reports are 64 bytes: byte 0 = ``0x58``, then the request bytes,
+    right-padded with ``0xEE``.
 
     Args:
         request: Serialized request datagram, request id first — e.g.

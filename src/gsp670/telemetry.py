@@ -111,14 +111,13 @@ def parse_fwu_status_ind(frame: Frame) -> Optional[HeadsetStatus]:
 
     .. warning::
         The FWU family travels on the **Rtx** channel (64-byte ``0x58``
-        reports, ``0xEE``-padded) — see ``analysis/session-handshake.md``
-        §6.3/§6.5. These notifications are **not** delivered as SECOM ``04 00``
-        ``Frame`` objects on the normal path; this parser only applies to a
-        ``Frame`` already extracted from an Rtx report, and its payload layout
-        was never confirmed by a live capture.
+        reports, ``0xEE``-padded). These notifications are **not** delivered
+        as SECOM ``04 00`` ``Frame`` objects on the normal path; this parser
+        only applies to a ``Frame`` already extracted from an Rtx report, and
+        its payload layout was never confirmed by a live capture.
 
     The status notification format is device-specific and partially documented.
-    Based on analysis/direct-hid-probing.md, the notification format includes:
+    The notification format includes:
     - Sequence/counter byte
     - Status byte(s)
     - Battery information

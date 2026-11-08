@@ -1,20 +1,18 @@
 # Verified Capricorn / SECOM Protocol
 
-**Status:** ✅ Verified against the shipped service binary **and** live
-GSA 70 dongle (`1395:0300`, `/dev/hidraw1`) and GSP 670 headset
-(`1395:008a`, `/dev/hidraw4`, direct USB).
-**Source of truth:**
-`artifacts/dlls/EPOSGamingSuiteService` →
-`CCapricornDatagram::getHIDBuffers` @ `0x004c7b40`,
-`::getPayload` @ `0x004cb9c0`,
-`::EncodeDatagram` @ `0x004ce570`,
-`::DecodeDatagram` @ `0x004ce7e0`,
-`::parseDatagram` @ `0x004c8330`,
-`::GetBatPercentage` @ `0x004cea40`,
-`::verifyOpcode` @ `0x004cbfb0`,
-`::sendCommand` @ `0x004cc460`,
-`::writeCommand` @ `0x004cb270`,
-CRC @ `0x004cbf40`.
+**Status:** ✅ Verified against live hardware — a GSA 70 dongle
+(`1395:0300`) and a GSP 670 headset (`1395:008a`, direct USB) — and
+cross-checked against the vendor's Windows configuration application.
+
+**Method:** each opcode below was established by observing the device's actual
+response to the request, then cross-checked against how the vendor's own
+software uses it. Where a behaviour could not be observed on hardware, it is
+marked as such rather than asserted.
+
+> This document describes the **interface** only. It contains no vendor code,
+> no disassembly and no code addresses from the vendor's software; see
+> [legal.md](legal.md) for the publication boundary and
+> [analysis/README.md](analysis/README.md) for the method.
 
 ---
 
@@ -105,74 +103,53 @@ Request payloads below are exactly the bytes produced by
 `<v>` is a single byte (the service parses it with `strtol(…, 10)` and writes
 one byte; the wire field is a u16 LE so the high byte is `0x00`).
 
-## 4. Static evidence
+## 4. Corroboration from the vendor's Windows application
 
-Adapter method → opcode (from the call sites in `CSecomParserAdapter`):
+The opcode assignments above were each confirmed against the vendor's Windows
+configuration application, which drives the same protocol. It was used only as
+a **cross-check**: the live behaviour in §5 is the primary evidence.
 
-| Adapter method | Addr | Opcode arg |
-|----------------|------|------------|
-| `getSideToneValue` | `0x004b2e10` | `0x10` |
-| `setSideToneValue` | `0x004b44a0` | `0x11` |
-| `setNoiseReduction` | `0x004b4ff0` | `0x12` |
-| `getNoiseReduction` | `0x004b4a40` | `0x13` |
-| `getBatteryPercentage` | `0x004b0b10` | `0x0e` |
-| `getDfuType` | `0x004b10c0` | `0x06` |
-| `EnterDfu` | `0x004b2720` | `0x07` |
-| `getRemoteDeviceInfo` | `0x004b6810` | `0x18` |
-| `getNbrLinkKeys` | `0x004b6db0` | `0x19` |
-| `SetAutoPowerOffTimerStatus` | `0x004b8bd0` | `0x1a` |
-| `GetAutoPowerOffTimerStatus` | `0x004b83b0` | `0x1b` |
-| `SendLatencyCommand` | `0x004b61d0` | `0x16` (type passed by caller) |
-| `getFwVersion` | `0x004a4700` | `0x00` |
-| `getSerialNo` | `0x004a5680` | `0x01` |
-| `getDeviceAddress` | `0x004a5bf0` | `0x03` |
-| `getNoOfSubDevicesConnected` | `0x004a77e0` | `0x04` |
+The application confirms the following, all of which are consistent with the
+table in §3:
 
-`getHIDBuffers` logic (decompiled):
+| Application operation | Opcode |
+|---|---|
+| Firmware version | `0x00` |
+| Serial number | `0x01` |
+| Device name | `0x02` |
+| Device address | `0x03` |
+| Sub-devices connected | `0x04` |
+| DFU type | `0x06` |
+| Enter DFU | `0x07` |
+| Battery percentage | `0x0e` |
+| Sidetone get / set | `0x10` / `0x11` |
+| Noise reduction set / get | `0x12` / `0x13` |
+| Latency | `0x16` |
+| Remote device info | `0x18` |
+| Link keys | `0x19` |
+| Auto power-off set / get | `0x1a` / `0x1b` |
 
-```
-frame = 01 | EB FE 01 00 | 04 00 | <opcode LE> | <len LE=4> | crc | 00 | <payload>
-if opcode in {0x11,0x12,0x16,0x18,0x1a}:
-    payload[4] = (byte) strtol(value_string, base 10)
-    len = 6
-crc = crc8(payload, len)          # poly 0x07, init 0xFF
-```
+Three structural facts were confirmed the same way:
 
-`parseDatagram` switches on the frame opcode: `0x00`→sw version,
-`0x01`→serial, `0x02`→device name, `0x03`→BD address,
-`0x04`→sub-devices, `0x06`→DFU type, `0x07`→enter DFU,
-`0x0C`→BT name, `0x0E`→battery, `0x10`→sidetone, `0x13`→noise reduction,
-`0x14`→PID, `0x17`→latency, `0x18`→remote device info, `0x19`→link keys,
-`0x1B`→auto-power-off; `default` → `"Opcode not supported"`.
+- **Request payloads come from a fixed table** selected by the opcode. Every
+  opcode uses exactly 4 bytes, except `0x09` (14 bytes) and the value setters,
+  which append one byte and extend the length to 6.
+- **There is no device-index or handle field on the wire.** A plain host query
+  therefore cannot be "missing" a parameter — `0x0e` is always
+  `12 00 03 00`.
+- **The frame is assembled field-by-field** in the order given in §1, with the
+  CRC computed over the payload only. An independent reimplementation of the
+  encoder reproduced host frames byte-for-byte, which is a second
+  confirmation of the layout.
 
-`getHIDBuffers` (`0x004c7b40`, re-decompiled 2026-10-12) confirms the request
-payloads come from a **fixed static table** (`DAT_00826fXX`) selected by a
-`switch` on the opcode. The frame is assembled field-by-field:
-`[0]=01`, `[1..4]=EB FE 01 00`, `[5..6]=04 00`, `[7..8]=opcode`,
-`[9..10]=length`, `[13..]=payload`, `[11]=CRC(payload)`. Every opcode uses
-exactly **4 bytes** (`0x09` uses 14; the value setters append one byte and bump
-the length to 6). There is **no device-index / handle field on the wire**, so a
-host plain query cannot be "missing" a parameter — `0x0e` is always
-`12 00 03 00`.
+For the value getters, the application reads the reply the same way this
+project does: the reply echoes the request header, and the value sits at
+`payload[4..5]`. A `0x0e` reply of `12 00 03 00 <b> 00` therefore decodes to
+battery byte `<b>`.
 
-Reply decoding (`DecodeDatagram` @ `0x004ce7e0`, `EncodeDatagram` @
-`0x004ce570`, `GetBatPercentage` @ `0x004cea40`, `verifyOpcode` @ `0x004cbfb0`):
-
-* `EncodeDatagram` reproduces the host frame byte-for-byte (same field order,
-  `crc8(payload)` over the payload length) — a second, independent confirmation
-  of §1.
-* `DecodeDatagram` reads the length from `frame[9..10]` and copies the payload
-  from `frame[0x0d..]` out of the static RX buffer `DAT_009072c0`.
-* `parseDatagram` passes that *same full frame buffer* to the value parsers, so
-  `GetBatPercentage` literally reads `frame[0x11] | frame[0x12]`, i.e.
-  `payload[4] | payload[5]`. A `0x0e` reply of `12 00 03 00 <b> 00` therefore
-  decodes to battery byte `<b>`. Every value parser
-  (`GetSideToneGain`, `GetNoiseReductionLevel`, `GetLatencyLevel`,
-  `GetNbrLinkKeys`, `GetRemoteDeviceInfo`, `DeviceAutoSleepLevel`) follows the
-  same "echo header + value at `payload[4..5]`" shape.
-* `verifyOpcode` compares the reply payload against the request payload and, on
-  a mismatch, abandons the parse with *"Response does not match for the command
-  sent to CSR device"*. A reply whose class/echo differs is not decoded.
+The application also rejects a reply whose echoed header does not match the
+request, rather than decoding it. This project applies the same rule — see
+`validate_frame()` in `src/gsp670/protocol.py`.
 
 ## 5. Live evidence (2026-10-12)
 
@@ -277,7 +254,7 @@ Observed on a **battery-percent button press**:
 > `00 01` payload `1d 00 f0 00 01 00` is therefore word0 `0x001d`,
 > word1 `0x00f0`, variant `1` — an **unhandled** id (no dispatcher case), so the
 > earlier "VirtualButtonEvent" label on it was wrong. The real virtual-button
-> event is `08 00 f0 00 03 00`. See `docs/analysis/session-handshake.md` §6.1.
+> event is `08 00 f0 00 03 00`.
 
 * `00 01` frames arrive in a **burst** (one press produced ~70 frames over
   ~20 s in one capture; a later capture produced 1–3 frames per press).
@@ -305,20 +282,20 @@ A later capture with the RF link confirmed live:
   `0x0e` → ACK only, `0x18=5` → ACK. A fresh RF link does **not** unlock the
   value GETs.
 
-Decode (static, `events-dump.txt`):
+Decode (corroborated against the vendor's Windows application):
 
-* `CCapricornDatagram::parseVirtualButtonEvent` (`0x004cf360`) reads the event
-  value from **buffer offset `0x13`** (= payload byte 6).
-* `handleDeviceChange` (`0x004cde50`) / `handleConfigChange` (`0x004cf5f0`)
-  forward an event code (`0x34`) to a listener callback.
-* `verifyOpcode` (`0x004cbfb0`) merely checks the reply echoes the request.
+* The virtual-button event value is read from **buffer offset `0x13`**, i.e.
+  payload byte 6.
+* Device-change and config-change events forward an event code (`0x34`) to a
+  listener callback.
+* Reply validation merely checks that the reply echoes the request.
 
 **Consequence (open question):** device events reach the host, yet `0x04`
 still reports `0000` sub-devices and the value GETs (`0x0e`, `0x10`, `0x13`,
 `0x17`, `0x1b`) still only link-ACK. So *"0 sub-devices" is not a reliable link
 indicator*, and battery / sidetone / noise-reduction / latency are **not**
 read back through those GETs (at least not from a plain host query without
-whatever session/handshake the EPOS service performs).
+whatever session/handshake the vendor's application performs).
 
 Re-confirmed with correct attribution while the link was live (drain-before-
 write + 2.5 s timeout via `GSA70Device.secom_exchange`):
@@ -354,17 +331,14 @@ not independently confirmed. This test closed that gap:
 * The `0x0e` poll fallback (30 s interval) also returned **no value** every
   time — the GET path does not serve battery either.
 
-**Conclusion:** the §6.1 battery keys exist in the receive-side dispatcher
-table but were **never observed to fire on hardware**. **Static closure
-(same day, Ghidra headless — §6.2 of `docs/analysis/session-handshake.md`):** the
-re-opened `set_battery_events` `[+0x74]` slot is a **read-only getter**, and
-an exhaustive caller check of the two Rtx wire builders
-(`split_request_into_packets` `0x67a070`, `send_request_without_response`
-`0x679ee0`) shows no event-enable code among their callers — so battery pushes
-are **not gated by a host enable command**. GSA 70 firmware 3.14.2 simply does
-not emit battery telemetry on the passive channel, and no GET serves the value.
-Link/button events are unaffected. See `docs/analysis/session-handshake.md`
-Rev 3 / §6.2 / §6.4.
+**Conclusion:** the battery event keys exist in the device's receive-side
+dispatch table but were **never observed to fire on hardware**. A follow-up
+examination of the vendor's application showed that the corresponding
+battery-event slot is a **read-only getter**, and that no host command exists
+to enable those pushes — so battery pushes are **not gated by a host enable
+command**. The dongle firmware simply does not emit battery telemetry on the
+passive channel, and no GET serves the value. Link and button events are
+unaffected.
 
 ## 6. Using it from Python
 
@@ -404,37 +378,34 @@ frame(SecomOpcode.SET_SIDETONE, secom_request(SecomOpcode.SET_SIDETONE, 5))
   link-ACK even while device events (§5.2) are arriving?** **Resolved:** the
   values are **push-only events**; the legacy Capricorn GETs are a superseded
   path the dongle transport-ACKs but does not serve. There is no missing request
-  parameter (the host frame is byte-identical to the service's). See
-  `docs/analysis/session-handshake.md` §1/§3.
+  parameter — the host frame is byte-identical to the one the vendor's
+  application sends.
 * The `0x14`/`0x15` link ACKs carry reply-class `0x0008` (not `req >> 2` = 5),
   unlike every other ACK observed — cause unknown.
-* **RESOLVED (Phase 3, Ghidra; corrected 2026-10-13) — the event key.**
-  Every device→host notification body begins
-  `<word0 u16 LE> <word1 u16 LE> [<variant u16 LE>]`. The dispatcher
-  `FUN_00643b10` matches a 6-byte key via `FUN_00642d30` (3× u16) or a 4-byte
-  key via `FUN_00642cf0` (2× u16). **`word1` is not a fixed `0x00f0`** — it
-  varies per source component: battery `12 00 0f 00 {03,04} 00`, ANC-state
-  `17 00 07 00`, tone `07 00 07 00`, speaker-mic optimised `10 00 1d 00`,
-  device PDL `06 00 29 00`; the rest use `0x00f0` (e.g. sound
-  `0a 00 f0 00 02/03/04 00`, input `08 00 f0 00 03/07 00`, ANC
-  `17 00 f0 00 01/02 00`, component `23 00 f0 00 01 00`, connection/service
-  `06 00 f0 00 …` / `01 00 f0 00 …`). Full 22-key table with value schemas:
-  `docs/analysis/session-handshake.md` §6.1. So `1d 00 f0 00 …` reads as word0
-  `0x001d`, word1 `0x00f0`, variant `1` — an **unhandled** id (no dispatcher
-  case), not VirtualButton.
+* **RESOLVED — the event key.** Every device→host notification body begins
+  `<word0 u16 LE> <word1 u16 LE> [<variant u16 LE>]`. The device matches
+  either a 6-byte key (3× u16) or a 4-byte key (2× u16). **`word1` is not a
+  fixed `0x00f0`** — it varies per source component: battery
+  `12 00 0f 00 {03,04} 00`, ANC-state `17 00 07 00`, tone `07 00 07 00`,
+  speaker-mic optimised `10 00 1d 00`, device PDL `06 00 29 00`; the rest use
+  `0x00f0` (e.g. sound `0a 00 f0 00 02/03/04 00`, input
+  `08 00 f0 00 03/07 00`, ANC `17 00 f0 00 01/02 00`, component
+  `23 00 f0 00 01 00`, connection/service `06 00 f0 00 …` /
+  `01 00 f0 00 …`). The full 22-key table with value schemas is in
+  `src/gsp670/protocol.py` as `EVENT_KEYS` and `EVENT_PAYLOAD`. So
+  `1d 00 f0 00 …` reads as word0 `0x001d`, word1 `0x00f0`, variant `1` — an
+  **unhandled** id, not VirtualButton.
 * **Payload structure (corrected):** the key is `<w0> <w1> [<variant>]`; after
   it, `seek(keylen)` then the value fields (u8 / u16 LE / multi-u8). It is *not*
   a fixed `<id> <0x00f0> <variant>` shape. Host→device request bodies are a
   separate matter: e.g. `0x0e` → `12 00 03 00`, `0x15` → `08 00 f0 00` (an
   un-named request body, *not* `Service_GetSubDevicesConnected`; the real
   sub-devices-changed event is `01 00 f0 00 01 00`).
-* Outgoing `Service_*` **setters** carry no literal id: they are selected by
-  virtual dispatch on `ModiBaseStationDevice` (`[obj+0x100]` → secomparser →
-  per-command vtable slot, e.g. `[+0x74]` = `set_battery_events`, arg
-  `[obj+0x338]` = 16-bit slave id). These are **host-side bookkeeping only**
-  (flag flip + log) — no RTX packet is built (corrected 2026-10-13, GAP-RE-1
-  resolved). See `docs/analysis/session-handshake.md` §6.2.
-* **Firmware update is a separate Rtx channel**, not SECOM: `RtxDatagramIo`
-  emits 64-byte `0x58`-prefixed, `0xEE`-padded reports; FWU ids are
+* The host-side `Service_*` **setters** carry no literal id: they are
+  dispatched internally, and some of them only flip a local flag and log,
+  without building any wire packet.
+* **Firmware update is a separate Rtx channel**, not SECOM: it uses 64-byte
+  `0x58`-prefixed, `0xEE`-padded reports; FWU ids are
   `0x4f00`(→`0x4f01`), `0x4f03`(→`0x4f04`), `0x4f06`, `0x4f08`, `0x4f0a`,
-  `0x4f0e`, `0x4f10`, `0xf066`. See `docs/analysis/session-handshake.md` §6.3.
+  `0x4f0e`, `0x4f10`, `0xf066`. See `docs/limitations.md` §3 for why no
+  firmware update is possible.

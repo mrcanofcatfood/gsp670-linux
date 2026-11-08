@@ -6,18 +6,23 @@ Source: https://github.com/OWNER/gsp670-linux
 Files: *
 Copyright: 2026 gsp670-linux contributors
 License: MIT
+Comment: This package contains no third-party or proprietary material.
+ The upstream EPOS Gaming Suite installer, its binaries, the device firmware,
+ USB traffic captures and any decompiled output are not distributed here, and
+ are not required to use this software. The optional head-related impulse
+ response used by the virtual-surround feature is fetched at run time from the
+ upstream HeSuVi project and is not packaged here.
+ .
+ The protocol documentation describes the observed USB HID interface of the
+ device (report framing, opcode numbers, payloads and event names). It
+ contains no vendor code, no disassembly and no code addresses from the
+ vendor's software.
 
 Files: contrib/easyeffects/*
 Copyright: 2026 gsp670-linux contributors
 License: MIT
-
-Files: docs/protocol-reference.md docs/verified-secom-opcodes.md \
-       docs/opcode-database.md docs/hid-protocol.md
-Copyright: 2026 gsp670-linux contributors
-License: MIT
-Comment: Protocol documentation derived from reverse engineering of the
- vendor's proprietary Windows software. It describes the observed wire
- protocol; it contains no vendor code or binary data.
+Comment: EasyEffects/LSP plugin parameter presets. These contain only DSP
+ parameter values and no vendor data.
 
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy

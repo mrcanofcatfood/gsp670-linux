@@ -1,0 +1,35 @@
+# Provenance allow-list
+#
+# Files listed here are permitted to contain patterns that
+# scripts/check-provenance.sh would otherwise reject.
+#
+# Format:  <path-glob>|<extended-regex>
+#
+#   * One entry per line.
+#   * The regex is matched against the file's contents with grep -E.
+#   * Blank lines and lines starting with '#' are ignored.
+#
+# Keep this list as short as possible. Every entry is a deliberate decision,
+# and each should have a comment explaining why it is needed.
+#
+# ---------------------------------------------------------------------------
+
+# docs/legal.md and this policy documentation have to be able to *discuss* the
+# patterns they forbid — they name the shapes of the things they rule out.
+docs/legal.md|0x00[0-9a-f]{6}
+docs/legal.md|FUN_[0-9a-f]{6}
+docs/legal.md|EPOSGamingSuite
+docs/legal.md|-----BEGIN [A-Z ]*PRIVATE KEY-----
+docs/legal.md|(licen[cs]e|activation|serial)[_-]?key
+
+# The provenance check script itself contains the patterns it searches for.
+scripts/check-provenance.sh|0x00[0-9a-f]{6}
+scripts/check-provenance.sh|FUN_[0-9a-f]{6}
+scripts/check-provenance.sh|EPOSGamingSuite
+scripts/check-provenance.sh|-----BEGIN [A-Z ]*PRIVATE KEY-----
+scripts/check-provenance.sh|(licen[cs]e|activation|serial)[_-]?key
+scripts/provenance-allowlist.txt|0x00[0-9a-f]{6}
+scripts/provenance-allowlist.txt|FUN_[0-9a-f]{6}
+scripts/provenance-allowlist.txt|EPOSGamingSuite
+scripts/provenance-allowlist.txt|-----BEGIN [A-Z ]*PRIVATE KEY-----
+scripts/provenance-allowlist.txt|(licen[cs]e|activation|serial)[_-]?key

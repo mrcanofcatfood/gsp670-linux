@@ -193,8 +193,10 @@ Common issues and their fixes are in
 | [docs/limitations.md](docs/limitations.md) | Everything that cannot work, and why |
 | [docs/virtual-surround.md](docs/virtual-surround.md) | Host-side 7.1 virtualisation |
 | [docs/cli-reference.md](docs/cli-reference.md) | `gsp670` command reference |
-| [docs/protocol-reference.md](docs/protocol-reference.md) | The vendor HID protocol |
+| [docs/protocol-reference.md](docs/protocol-reference.md) | The device HID protocol |
 | [docs/verified-secom-opcodes.md](docs/verified-secom-opcodes.md) | Verified opcodes |
+| [docs/legal.md](docs/legal.md) | Legal position and provenance policy |
+| [docs/analysis/README.md](docs/analysis/README.md) | How the protocol was figured out |
 
 ## Development
 
@@ -225,6 +227,26 @@ rules in `rules.d/`, and the docs.
 ```bash
 sudo ./scripts/install.sh --uninstall
 ```
+
+## Legal
+
+This project publishes the hardware **interface** only. It contains no vendor
+binaries, no firmware, no decompiled output and no USB captures, and the
+device's control protocol has no encryption, access control or licence
+validation — so there is no protection measure being circumvented.
+
+The boundary is enforced by a required CI check:
+
+```bash
+./scripts/check-provenance.sh
+```
+
+See [docs/legal.md](docs/legal.md) for the full position, and
+[docs/analysis/README.md](docs/analysis/README.md) for the method used to
+work out the protocol.
+
+This is an independent project and is **not affiliated with EPOS or
+Sennheiser**. Their trademarks are used only to identify the hardware.
 
 ## Licence
 

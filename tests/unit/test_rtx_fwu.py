@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Unit tests for the Rtx FWU channel helpers (Phase 3 recovery).
+Unit tests for the Rtx FWU channel helpers.
 
 FWU travels on the Rtx datagram channel (64-byte ``0x58`` reports,
-``0xEE``-padded), *not* SECOM ``04 00`` — see
-``analysis/session-handshake.md`` section 6.3/6.5.
+``0xEE``-padded), *not* SECOM ``04 00``.
 """
 
 import unittest

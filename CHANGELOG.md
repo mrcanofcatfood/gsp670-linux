@@ -71,6 +71,30 @@ First public release.
 - Removed the duplicate `src/setup.py` build backend.
 - Removed hardcoded developer paths from the systemd units.
 
+### Legal and provenance
+
+- Added `docs/legal.md` — the project's legal position: no proprietary
+  material is redistributed, the device protocol has no protection measure
+  (no encryption, access control, licence validation or authentication), so
+  no circumvention is involved, and the interoperability exceptions that
+  would apply if it were otherwise are recorded for Australia (s47D), the
+  United States (17 USC §1201(f)) and the EU (InfoSoc Art. 6).
+- Added `scripts/check-provenance.sh`, wired into CI as a **required** check.
+  It fails the build on vendor binaries, oversized files, vendor code
+  addresses, internal symbol names, disassembly listings, the vendor's
+  executable name, and licence-key artefacts. A small allow-list
+  (`scripts/provenance-allowlist.txt`) lets the legal documentation discuss
+  those patterns.
+- The detailed reverse-engineering notes were moved out of this repository
+  into the maintainer's private workbench. The published
+  `docs/analysis/README.md` keeps only the high-level method and findings.
+- Rewrote `docs/hid-protocol.md` and the evidence sections of
+  `docs/verified-secom-opcodes.md` and `docs/current-status.md` to describe
+  observed behaviour rather than the vendor's implementation.
+- Removed vendor-internal references from the source and test docstrings.
+- Rewrote `rules.d/debian/copyright` to state plainly that no third-party or
+  proprietary material is redistributed.
+
 ### Notes
 - The "Game" (stereo) and "Chat" (mono) outputs come from the stock
   `usb-gaming-headset.conf` ALSA profile set that ships with PulseAudio/ALSA.

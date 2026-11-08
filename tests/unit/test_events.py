@@ -2,10 +2,8 @@
 """
 Unit tests for the events module.
 
-Tests event key parsing and value decoding for the 22 device->host
-Modi event keys recovered from EPOSGamingSuiteService.
-
-Reference: analysis/session-handshake.md §6.1 (corrected 2026-10-13).
+Tests event key parsing and value decoding for the 22 device->host event
+types the headset and dongle emit unsolicited.
 """
 
 import sys

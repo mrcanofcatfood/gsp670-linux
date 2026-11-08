@@ -116,8 +116,8 @@ to a `secom_exchange(0x0e)` poll every 30 s if the headset is linked but quiet.
 and raw `ConnectionStatus`).
 
 **Note:** battery events arrive only when the headset is actively RF-linked
-(push model — no subscription needed, see `docs/analysis/session-handshake.md`
-Revision 2).
+(push model — no subscription needed). See
+[docs/current-status.md](current-status.md) §3.
 
 ## Options
 

@@ -1,341 +1,155 @@
-# EPOS Gaming Suite - HID Protocol Documentation
+# EPOS | Sennheiser HID interface
 
-**Version:** 1.12.2.1185
-**Analysis Date:** 2026-10-11
+**Scope:** the USB HID interface exposed by the GSP 670 headset and the GSA 70
+dongle, as observed on real hardware.
+
+> This document describes the **interface** only — device identifiers, USB
+> layout, and report framing. It contains no vendor code, no internal symbol
+> names and no speculative register maps. See [legal.md](legal.md) for the
+> publication boundary and [analysis/README.md](analysis/README.md) for the
+> method.
 
 ---
 
-## 1. Device Identification
+## 1. Device identification
 
-### 1.1 USB HID Devices
+### 1.1 USB identifiers
 
-| Device | VID (hex) | VID (dec) | PID (hex) | PID (dec) | Adapter |
-|--------|-----------|-----------|-----------|-----------|---------|
-| Sennheiser GSP 670 | 0x1395 | 5013 | 0x0300 | 768 | Capricorn |
-| GSX 300 | 0x1395 | 5013 | 0x0152 | 338 | Boston |
-| GSX 1000 II | 0x1395 | 5013 | 0x00B1 | 177 | Boston |
-| EPOS S6 | 0x1395 | 5013 | 0x0601 | 1537 | CVideo |
-| EPOS GTW 270 | 0x1395 | 5013 | 0x009E | 158 | Capricorn |
-| GSA 70 | 0x1395 | 5013 | 0x0080 | 128 | Capricorn |
+All EPOS | Sennheiser gaming devices share the vendor ID `0x1395`.
 
-**Note:** All EPOS gaming devices share VID 0x1395 (Sennheiser).
+| Device | Mode | PID (hex) | PID (dec) |
+|---|---|---|---|
+| GSA 70 dongle | wireless 2.4 GHz | `0x0300` | 768 |
+| GSP 670 headset | wired USB-C | `0x008A` | 138 |
+| GSP 670 headset | firmware-update mode | `0x808A`, `0x8089` | — |
+| GSA 70 dongle | firmware-update mode | `0x8300`, `0x8303` | — |
 
-### 1.2 Device Types
+Note that the vendor has rebranded the product over time: the same hardware
+appears as "Sennheiser GSA 70" or "EPOS GSA 70" depending on the firmware
+version. Do not match on the product string — match on `1395:0300`.
+
+### 1.2 Connection types
 
 | Type | Description |
-|------|-------------|
-| WiredUSB | Direct USB connection |
-| Wireless BT | Bluetooth connection |
+|---|---|
+| WiredUSB | Headset connected directly by USB-C |
+| Wireless | Headset connected through the GSA 70 dongle |
 
 ---
 
-## 2. CxAudioHidDll32.dll Analysis
+## 2. USB layout
 
-### 2.1 DLL Information
+### 2.1 Audio interfaces
 
-- **File:** CxAudioHidDll32.dll
-- **Size:** 1,692,672 bytes
-- **Build:** Visual Studio 2010, August 9, 2017
-- **Purpose:** HID interface to Conexant CX20805 audio processor
+The dongle exposes **6 USB interfaces**: interfaces 0–4 are USB Audio (two
+control plus streaming pairs), and **interface 5 is the only HID interface**
+(class 3).
 
-### 2.2 Exported Functions
+The dongle exposes **no `power_supply` node** on Linux, so battery
+information is not reachable through the normal power-supply path — it would
+have to come through the HID control protocol instead.
 
-#### Device Connection (14 functions)
-
-| Function | Ordinal | Description |
-|----------|---------|-------------|
-| CxAudioHidCloseConnection | 5 | Close HID connection |
-| CxAudioHidConnectedDevice | 6 | Get connected device info |
-| CxAudioHidDevConnect | 7 | Connect to device |
-| CxAudioHidDevConnectByPatchFile | 8 | Connect using patch file |
-| CxAudioHidDevConnectByPnpId | 9 | Connect by PnP ID |
-| CxAudioHidDevConnectToDevice | 10 | Connect directly |
-| CxAudioHidDevDisconnect | 11 | Disconnect device |
-| CxAudioHidEnumerate | 12 | Enumerate HID devices |
-| CxAudioHidGetInputReport | 13 | Get input report |
-| CxAudioHidGetLibVersionStringAscii | 14 | Get library version |
-| CxAudioHidGetMutexNameAscii | 15 | Get mutex name (ASCII) |
-| CxAudioHidGetMutexNameUnicode | 16 | Get mutex name (Unicode) |
-| CxAudioHidIsDeviceConnected | 19 | Check if device connected |
-| CxAudioHidOpenConnection | 20 | Open HID connection |
-
-#### ICxAudioHidDev Interface (35 functions)
-
-| Category | Functions |
-|----------|-----------|
-| Device Info | GetChipCode, GetChipVersion, GetDescriptionString, GetDevicePath, GetEepromCustomInfo, GetFirmwareVersion, GetIndexedString, GetInfo, GetManufacturerString, GetPatchVersion, GetProductString, GetSerialNumberString, DeviceReset |
-| EEPROM | ContentsOperation, GetSize, Patch, PrepareForPatch, Read, ReadAsciiString, ReadPointer, ReadSerialNumber, ReadUnicodeString, Write, WriteSerialNumber, WriteUnicodeStringViaPointer |
-| Memory | MemoryFill, MemoryOperation, MemoryPatch, MemoryPatchCheckFile, MemoryRead, MemoryWrite, IsMemoryWritable |
-| Registers | RegisterBitFieldOperation, RegisterClearBit, RegisterReadBit, RegisterReadBitFieldInByte, RegisterReadByte, RegisterReadWord, RegisterSetBit, RegisterWriteBit, RegisterWriteBitFieldInByte, RegisterWriteByte, RegisterWriteWord, RegistersRead, RegistersWrite |
-| I/O | GetInputReport, ReadInputReport, WriteOutputReport, SetIOCallbackRoutine, SetPatchCallbackRoutine |
-| Property | PropertyGet |
-
----
-
-## 3. HID Report Format
-
-### 3.1 HID.DLL Functions Used
-
-| Function | Purpose |
-|---------|---------|
-| HidD_GetSerialNumberString | Get device serial number |
-| HidD_GetProductString | Get product name |
-| HidD_GetManufacturerString | Get manufacturer (EPOS) |
-| HidD_GetAttributes | Get HID attributes (VID/PID) |
-| HidD_GetPreparsedData | Get preparsed data |
-| HidP_GetCaps | Get HID capability codes |
-| HidD_GetInputReport | Read input report |
-| HidD_GetFeature | Get feature report |
-| HidD_SetFeature | Set feature report |
-
-### 3.2 Report Types
-
-Based on CxAudioHidDll32.dll exports, the following HID reports are used:
-
-#### Input Reports (Device → Host)
-- **Audio Status:** Volume, mute state, battery level
-- **Microphone Levels:** Mic FFT levels, input volume
-- **Device Status:** Connection state, firmware version
-- **EQ Data:** Current EQ band values
-
-#### Output Reports (Host → Device)
-- **Volume Control:** Set speaker volume, mute
-- **Microphone Control:** Mic mute, gain
-- **EQ Settings:** All 9 EQ band values
-- **Device Commands:** Reset, enter bootloader mode
-
-### 3.3 Feature Reports
-- **Device Configuration:** Read/write device settings
-- **EEPROM Access:** Read/write calibration data
-- **Register Access:** Read/write chip registers
-
----
-
-## 4. HID Report Structure (Inferred)
-
-### 4.1 Report IDs
-
-Based on standard HID audio device practices:
-
-| Report ID | Type | Size | Description |
-|-----------|------|------|-------------|
-| 0x01 | Output | ~64 bytes | Volume/Mute control |
-| 0x02 | Output | ~64 bytes | EQ band values |
-| 0x03 | Output | ~64 bytes | Microphone settings |
-| 0x04 | Input | ~64 bytes | Status response |
-| 0x05 | Feature | ~64 bytes | Device info |
-
-### 4.2 Volume/Mute Report (0x01)
-
-```
-Offset  Size  Description
-0x00   1     Report ID (0x01)
-0x01   1     Volume (0-100)
-0x02   1     Mute (0=unmuted, 1=muted)
-0x03   1     Channel (0=master, 1=left, 2=right)
-0x04   60    Reserved
-```
-
-### 4.3 EQ Report (0x02)
-
-```
-Offset  Size  Description
-0x00   1     Report ID (0x02)
-0x01   9     EQ Band values (1 byte each, -127 to +127)
-0x0A   58    Reserved
-```
-
-### 4.4 Microphone Report (0x03)
-
-```
-Offset  Size  Description
-0x00   1     Report ID (0x03)
-0x01   1     Mute (0=unmuted, 1=muted)
-0x02   1     Gain (0-100)
-0x03   9     Mic EQ bands (if supported)
-0x0C   56    Reserved
-```
-
----
-
-## 5. Device Communication Flow
-
-### 5.1 Connection Sequence
-
-```
-1. HID Enumeration
-   └─> CxAudioHidEnumerate()
-       └─> SetupDiGetClassDevs()
-       └─> SetupDiEnumDeviceInterfaces()
-
-2. Device Connection
-   └─> CxAudioHidDevConnectByPnpId(VID, PID)
-       └─> CreateFile() on HID device
-       └─> HidD_GetAttributes() - verify VID/PID
-       └─> HidD_GetPreparsedData()
-       └─> HidP_GetCaps() - get report sizes
-
-3. Get Device Info
-   └─> ICxAudioHidDev_DeviceGetFirmwareVersion()
-   └─> ICxAudioHidDev_DeviceGetSerialNumberString()
-   └─> ICxAudioHidDev_GetChipCode()
-```
-
-### 5.2 Setting Volume
-
-```
-Host → Device:
-  WriteFile(hDevice, volumeReport)
-  
-Report: [0x01, volume(0-100), mute(0/1), channel, ...]
-
-Device → Host:
-  ReadFile(hDevice, statusReport)
-```
-
-### 5.3 Setting EQ
-
-```
-Host → Device:
-  WriteFile(hDevice, eqReport)
-  
-Report: [0x02, EQ1(-127 to 127), EQ2, ..., EQ9]
-
-Device → Host:
-  ReadFile(hDevice, ackReport)
-```
-
----
-
-## 6. Capricorn Adapter
-
-### 6.1 Overview
-
-The "Capricorn" is the internal codename for the Sennheiser/EPOS audio processor (Conexant CX20805 based).
-
-### 6.2 Capricorn Features
-
-| Feature | Description |
-|---------|-------------|
-| Speaker EQ | 9-band parametric EQ |
-| Microphone EQ | 9-band parametric EQ |
-| Reverb | Room reverb effect |
-| Noise Gate | Adjustable threshold |
-| Sidetone | Microphone monitoring |
-| 3D Audio | Surround sound processing |
-
-### 6.3 Device Info
+### 2.2 HID interface
 
 | Property | Value |
-|----------|-------|
-| Chip | Conexant CX20805 |
-| USB Class | Audio/MIDI |
-| HID Protocol | Custom EPOS protocol |
-| Audio Channels | 2 (stereo playback, mono mic) |
-| Sample Rate | Up to 48kHz |
+|---|---|
+| Interface number | 5 |
+| Class | HID (3) |
+| Endpoints | a single IN endpoint (`0x81`), 64-byte packets |
+| Report ID | `0x01` |
+| Output report | 106 bytes (107 including the report ID) |
+| Input report | 106 bytes (107 including the report ID) |
+
+There is **no interrupt-OUT endpoint**: the output report is delivered via a
+HID `SET_REPORT` control transfer. Writing the wrong buffer length resets
+(re-enumerates) the device, so always write exactly 107 bytes.
 
 ---
 
-## 7. DFU (Device Firmware Update)
-
-### 7.1 DFU Flow
+## 3. Report framing
 
 ```
-1. Enter DFU Mode
-   └─> hidDfuConnect()
-       └─> Send DETACH command
-       └─> Device reboots to bootloader
-
-2. Transfer Firmware
-   └─> hidDfuUpgrade(hDevice, firmwareData)
-       └─> Send firmware chunks via HID
-       └─> Device writes to flash
-
-3. Verify and Reboot
-   └─> hidDfuGetResult()
-   └─> Device reboots to normal mode
+byte  0      = 0x01            report id
+bytes 1..4   = EB FE 01 00     sync
+bytes 5..6   = 04 00           host marker (host -> device)
+bytes 7..8   = opcode, LE      == the SECOM command (0x00..0x1C)
+bytes 9..10  = length, LE      payload length
+byte  11     = CRC-8(payload)  poly 0x07, init 0xFF
+byte  12     = 0x00            filler
+bytes 13..   = payload
 ```
 
-### 7.2 ModiUpdater Integration
+The reply markers are:
 
-```
-ModiUpdater.dll
-├── ModiFwuCreate() → Creates firmware update instance
-└── ModiFwuDestroy() → Destroys instance
+| Marker | Meaning |
+|---|---|
+| `04 00` | host → device, and device → host data replies |
+| `10 01` | device → host unsolicited data / events |
+| `05 30` | ACK |
+| `04 10` | NAK |
+| `00 01` | device → host event burst |
+| `ff 01` | device → host recurring keepalive / config frame |
 
-Firmware update calls:
-└─> HidDfu.dll (hidDfu_* functions)
-    └─> HID reports to device
-```
+The CRC-8 is an **integrity check** that detects a corrupted packet. It is not
+keyed and is not a protection measure.
+
+Full details are in [protocol-reference.md](protocol-reference.md); the opcode
+table is in [verified-secom-opcodes.md](verified-secom-opcodes.md).
 
 ---
 
-## 8. Register Map (Inferred)
+## 4. Accessing the interface on Linux
 
-### 8.1 Audio Registers
+### 4.1 udev permissions
 
-| Register | Access | Description |
-|---------|--------|-------------|
-| 0x00 | R/W | Master Volume |
-| 0x01 | R/W | Left Channel Volume |
-| 0x02 | R/W | Right Channel Volume |
-| 0x03 | R/W | Microphone Gain |
-| 0x04 | R/W | Mute Control |
-| 0x05-0x0D | R/W | EQ Band 1-9 |
-| 0x0E | R/W | Reverb Level |
-| 0x0F | R/W | Noise Gate Threshold |
+The HID interface is exposed as a `hidraw` node. To access it without root,
+install the udev rules in `udev/99-gsp670.rules`, which grant the `audio` group
+access and create the symlinks `/dev/gsp670-dongle` and `/dev/gsp670-headset`.
 
-### 8.2 Device Registers
+```bash
+sudo cp udev/99-gsp670.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
+sudo usermod -aG audio "$USER"     # then log out and back in
+```
 
-| Register | Access | Description |
-|---------|--------|-------------|
-| 0x80 | R | Firmware Version |
-| 0x81 | R | Chip ID |
-| 0x82 | R/W | Device Status |
-| 0x83 | R/W | Configuration |
+### 4.2 With hidapi
+
+```python
+import hid
+
+device = hid.device()
+device.open_path(b"/dev/gsp670-dongle")
+device.set_nonblocking(True)
+```
+
+This is what the `gsp670` library does; see `src/gsp670/device.py`.
 
 ---
 
-## 9. Implementation Reference
+## 5. Firmware update
 
-### 9.1 Linux HID Access
+The device supports a firmware-update mode with its own product IDs (see
+§1.1). However, **no firmware update is possible from Linux**, for two
+independent reasons:
 
-```cpp
-// Linux HID example using hidapi
-#include <hidapi.h>
+1. The device already runs the final known firmware, and no corrected image is
+   publicly available.
+2. The device rejects the update command at its own firmware level. The
+   vendor's Windows application reaches update mode through an orchestrated
+   sequence of mode transitions with USB re-enumeration between them, which a
+   single raw HID write cannot reproduce. Every candidate formulation of the
+   request was tried against real hardware and refused.
 
-// Open device
-hid_device* dev = hid_open(0x1395, 0x0300, NULL);
-
-// Set volume
-unsigned char report[64] = {0x01, volume, mute, 0};
-hid_write(dev, report, 64);
-
-// Read status
-unsigned char buf[64];
-hid_read(dev, buf, 64);
-
-// Close
-hid_close(dev);
-```
-
-### 9.2 Qt HID Wrapper
-
-```cpp
-// EPOSHIDDevice class
-class EPOSHIDDevice {
-public:
-    bool open(quint16 vid, quint16 pid);
-    void close();
-    bool setVolume(int volume, bool mute);
-    bool setEQ(QList<int> bands);  // 9 bands
-    bool setMicGain(int gain);
-    QByteArray readStatus();
-};
-```
+This project ships **no firmware-update tooling** and does not attempt to
+bypass that gate. See [limitations.md](limitations.md) §3.
 
 ---
 
-*Document Version: 1.0*
-*Generated: 2026-10-11*
-*Note: HID report formats are inferred based on DLL analysis and standard HID audio practices. Actual protocol may vary.*
+## 6. Reference
+
+- Protocol framing: [protocol-reference.md](protocol-reference.md)
+- Opcode table: [verified-secom-opcodes.md](verified-secom-opcodes.md)
+- Opcode definitions: [opcode-database.md](opcode-database.md)
+- Method summary: [analysis/README.md](analysis/README.md)
+- Linux implementation: `src/gsp670/protocol.py`, `src/gsp670/device.py`
+- udev rules: `udev/99-gsp670.rules`

@@ -122,7 +122,7 @@ from .protocol import (
     RPT,
     RTX_FWU_IDS,
     RTX_PAD,
-    # Rtx FWU channel (Phase 3, session-handshake.md §6.3/§6.5)
+    # Rtx FWU channel
     RTX_REPORT_PREFIX,
     RTX_REPORT_SIZE,
     SYNC,
@@ -197,7 +197,7 @@ __all__ = [
     "secom_value",
     "marker_transform",
     "make_fwu_frame",
-    # Rtx FWU channel (Phase 3, session-handshake.md §6.3/§6.5)
+    # Rtx FWU channel
     "RTX_REPORT_PREFIX",
     "RTX_REPORT_SIZE",
     "RTX_PAD",

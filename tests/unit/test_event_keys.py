@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Unit tests for the recovered Modi device -> host event key decoder.
+Unit tests for the device -> host event key decoder.
 
-The keys were recovered statically from the GSA 70 service image dispatcher
-``FUN_00643b10``; see ``analysis/session-handshake.md`` section 6.1.
+The keys were established by observing unsolicited notifications from a GSA 70
+dongle (1395:0300) and a GSP 670 headset in USB device mode (1395:008a),
+and cross-checked against the vendor's Windows configuration application.
 
 Key shape: ``<word0 u16 LE> <word1 u16 LE> [<variant u16 LE>]`` where ``word1``
 is ``0x00F0`` for most notifications but varies by source component.

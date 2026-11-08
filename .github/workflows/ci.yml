@@ -56,4 +56,37 @@ jobs:
             scripts/distros.sh \
             scripts/gsp670-audio-guard.sh \
             scripts/gsp670-audio-doctor.sh \
-            scripts/setup-virtual-surround.sh
+            scripts/setup-virtual-surround.sh \
+            scripts/check-provenance.sh
+
+  provenance:
+    # Required check. This repository publishes the hardware interface only;
+    # the vendor's implementation detail (binaries, decompiled output,
+    # captures, disassembly, internal symbol names, code addresses) must never
+    # be committed. See docs/legal.md.
+    name: Provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The check inspects tracked files, so it needs the full history.
+          fetch-depth: 0
+
+      - name: Check the publication boundary
+        run: ./scripts/check-provenance.sh
+
+      - name: Verify no binary files are tracked
+        run: |
+          # Belt and braces: confirm with `file` that nothing tracked is
+          # actually a binary. Empty marker files are fine.
+          failed=0
+          while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            [ -s "$f" ] || continue
+            if ! file --mime "$f" | grep -qE 'text/|application/(json|xml)'; then
+              echo "::error file=$f is not a text file ($(file -b "$f"))"
+              failed=1
+            fi
+          done < <(git ls-files)
+          exit $failed
+

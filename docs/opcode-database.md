@@ -161,5 +161,5 @@ When probing with various payloads to 0x4F12 (GET_FEATURES):
 ## Reference
 
 - Protocol implementation: `src/gsp670/protocol.py`
-- Analysis document: `docs/analysis/direct-hid-probing.md`
-- Test script: `tests/integration/test_protocol_probe.py` (if created)
+- Opcode table with evidence: `docs/verified-secom-opcodes.md`
+- Method summary: `docs/analysis/README.md`

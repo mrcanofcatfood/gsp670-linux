@@ -2,15 +2,13 @@
 """
 Event parsing for device->host notifications.
 
-Provides dataclasses and parsers for the 22 Modi event keys recovered from
-the EPOSGamingSuiteService dispatcher (FUN_00643b10).
+Provides dataclasses and parsers for the 22 device event types that the
+headset and dongle emit unsolicited.
 
 Event key format: ``<word0 u16 LE> <word1 u16 LE> [<variant u16 LE>]``
 - word1 is NOT a uniform namespace: battery uses 0x000F, ANC 0x0007,
   speaker-mic 0x001D, device PDL 0x0029, default 0x00F0.
 - Value bytes follow the key; their schema is in EVENT_PAYLOAD.
-
-Reference: analysis/session-handshake.md §6.1 (corrected 2026-10-13).
 """
 
 from __future__ import annotations

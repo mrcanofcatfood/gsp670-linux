@@ -189,4 +189,5 @@ Host                           Device
 ## Reference
 
 - Protocol implementation: `src/gsp670/protocol.py`
-- Analysis document: `docs/analysis/direct-hid-probing.md`
+- Opcode table with evidence: `docs/verified-secom-opcodes.md`
+- Method summary: `docs/analysis/README.md`

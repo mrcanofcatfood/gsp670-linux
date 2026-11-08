@@ -20,7 +20,7 @@ WIREPLUMBER_DIR ?= $(PREFIX)/share/wireplumber/wireplumber.conf.d
 PIPEWIRE_DIR    ?= $(PREFIX)/share/pipewire/pipewire.conf.d
 
 .PHONY: help install uninstall install-python test lint format check \
-        install-udev install-systemd install-config clean
+        install-udev install-systemd install-config clean check-provenance
 
 help:
 	@echo "gsp670-linux"
@@ -31,7 +31,8 @@ help:
 	@echo "  make test             run the test suite"
 	@echo "  make lint             run ruff (if available)"
 	@echo "  make format           run ruff format (if available)"
-	@echo "  make check            test + lint"
+	@echo "  make check-provenance verify no proprietary material is committed"
+	@echo "  make check            test + lint + provenance"
 	@echo ""
 	@echo "  sudo ./scripts/install.sh   interactive installer (recommended)"
 	@echo "  ./scripts/install.sh --user per-user install, no root"
@@ -92,7 +93,12 @@ format:
 		&& ruff format src/ tests/ scripts/ \
 		|| echo "ruff not installed; skipping (pip install ruff)"
 
-check: test lint
+check: test lint check-provenance
+
+# Verify that no proprietary material has been committed. This is a required
+# CI check; see docs/legal.md for the policy.
+check-provenance:
+	@./scripts/check-provenance.sh
 
 clean:
 	rm -rf build dist *.egg-info src/*.egg-info

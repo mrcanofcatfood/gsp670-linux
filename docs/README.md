@@ -24,17 +24,23 @@ Reference documentation for `gsp670-linux`.
 
 ## Protocol
 
-These describe the vendor's "Capricorn" HID protocol, recovered by reverse
-engineering the vendor's Windows software. They document the observed wire
-format; they contain no vendor code or binary data.
+These describe the vendor's "Capricorn" HID protocol. They document the
+observed hardware interface — the wire format, the opcodes and the event
+model — which is what interoperability requires.
 
 | Document | Contents |
 |---|---|
-| [verified-secom-opcodes.md](verified-secom-opcodes.md) | The authoritative opcode and payload table, with evidence |
+| [verified-secom-opcodes.md](verified-secom-opcodes.md) | The opcode table, with live and corroborating evidence |
 | [protocol-reference.md](protocol-reference.md) | Frame, marker and CRC reference |
-| [opcode-database.md](opcode-database.md) | Known opcode definitions |
-| [hid-protocol.md](hid-protocol.md) | HID descriptor and interface layout |
-| [analysis/](analysis/) | The working notes and evidence behind the above |
+| [opcode-database.md](opcode-database.md) | Opcode definitions |
+| [hid-protocol.md](hid-protocol.md) | USB layout and HID interface |
+| [analysis/](analysis/README.md) | High-level summary of the method and the reasoning |
+
+## Legal
+
+| Document | Contents |
+|---|---|
+| [legal.md](legal.md) | Legal position, provenance policy, and the publication boundary |
 
 ## Status and internals
 

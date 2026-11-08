@@ -740,9 +740,11 @@ class GSA70Device:
         Return the headset battery percentage, or ``None``.
 
         Requires the headset to be powered on and linked to the dongle;
-        otherwise the dongle only returns a link ACK. The value is decoded
-        exactly as the service does (``GetBatPercentage`` @ ``0x004cea40``):
+        otherwise the dongle only returns a link ACK. The value is read from
         ``payload[4] | payload[5]`` of the ``0x0e`` data reply.
+
+        Note that the device does not answer this query with a percentage in
+        practice; see ``docs/limitations.md`` for why.
         """
         f = self.secom_exchange(SecomOpcode.GET_BATTERY_PERCENTAGE)
         if f is None:
